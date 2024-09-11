@@ -1,0 +1,8 @@
+.vs
+bin
+obj
+publish
+*.csproj.user
+*.pubxml.user
+*.dll
+PublishedFileId.txt
