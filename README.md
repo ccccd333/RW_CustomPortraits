@@ -1,3 +1,6 @@
+[![Steam Workshop|Really Custom Portraits](https://img.shields.io/steam/subscriptions/2956572955?style=for-the-badge&logo=steam&label=Really%20Custom%20Portraits&labelColor=blue
+)](https://steamcommunity.com/sharedfiles/filedetails/?id=2956572955)
+
 Adds a portrait to the selected pawns and animals.
 **This mod does not generate images, only displays them.**
 
