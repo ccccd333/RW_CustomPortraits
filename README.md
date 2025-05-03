@@ -5,7 +5,7 @@
 Adds a portrait to the selected pawns and animals.
 **This mod does not generate images, only displays them.**
 
-# ![How to use](https://i.imgur.com/BJAk54B.png)
+# ![How to use](https://i.postimg.cc/jqk53P2R/h-How-To-Use.png)
 
 - Portraits can be set in "Health" tab of a pawn.
 - Images are loaded from "CustomPortraits" folder in RimWorld root directory.  
@@ -16,7 +16,7 @@ Adds a portrait to the selected pawns and animals.
 - No need to restart for every file.
 - Textures loaded on demand every time you open portrait dropdown.
 
-# ![Features](https://i.imgur.com/BCl0myT.png)
+# ![Features](https://i.postimg.cc/zBzB6kTG/h-Features.png)
 
 - Images of any size.
 - Transparency.
@@ -24,7 +24,7 @@ Adds a portrait to the selected pawns and animals.
 - A lot of customization options and increasing.
 - Available for animals on def-basis. (only 1.4 and 1.5 versions)
 
-# ![Settings](https://i.imgur.com/95mfh2q.png)
+# ![Settings](https://i.postimg.cc/t4F4gc5g/h-Settings.png)
 
 5 position modes:
 
@@ -56,7 +56,7 @@ Default size and size on hover can be adjusted. If you do not want portrait to g
 
 There's no background, and no border. Draw them on the portrait image if you'd like.
 
-# ![Animals](https://i.imgur.com/UnN1tm7.png)
+# ![Animals](https://i.postimg.cc/fbjy8PtP/hAnimals.png)
 
 You can set portraits for animal races using a magnifying glass button next to X in animal info card ( i - button).
 
@@ -64,7 +64,7 @@ The portrait will be assigned to the animal def and will be visible when selecti
 
 Implemented only for 1.4 and 1.5 versions of the game.
 
-# ![Compatibility](https://i.imgur.com/23ovsI5.png)
+# ![Compatibility](https://i.postimg.cc/3NWwJJSM/h-Compatibility.png)
 
 It is safe to add to an existing game.
 
@@ -85,14 +85,14 @@ Other mods changing colonist bar may or may not work.
 
 Disabled if [[NL] Custom Portraits](https://steamcommunity.com/sharedfiles/filedetails/?id=1569605867) mod is detected.
 
-# ![Screenshots](https://i.imgur.com/8dGQhFw.png)
+# ![Screenshots](https://i.postimg.cc/BQLvrbPH/h-Screenshots.png)
 
 HUD: [RimHUD](https://steamcommunity.com/sharedfiles/filedetails/?id=1508850027)  
 Apparel, Weapon, Pawn race: [Kurin, The Three Tailed Fox [Deluxe Edition]](https://steamcommunity.com/sharedfiles/filedetails/?id=2670355481)
 Additionally: [[NL] Facial Animation - WIP](https://steamcommunity.com/sharedfiles/filedetails/?id=1635901197), [Camera+](https://steamcommunity.com/sharedfiles/filedetails/?id=867467808), [Graphics Settings+](https://steamcommunity.com/sharedfiles/filedetails/?id=1678847247)  
 Portrait images: MidJourney
 
-# ![Similar Mods](https://i.imgur.com/XzFgLef.png)
+# ![Similar Mods](https://i.postimg.cc/vHJmby5j/h-Similar-Mods.png)
 
 _Normalize presentation of alternatives!_
 
@@ -101,7 +101,7 @@ _Normalize presentation of alternatives!_
 - [Portraits of the Rim](https://steamcommunity.com/sharedfiles/filedetails/?id=2937991425)
 - [Avatar](https://steamcommunity.com/sharedfiles/filedetails/?id=3111373293)
 
-# ![Changelog](https://i.imgur.com/ZKfbgvo.png)
+# ![Changelog](https://i.postimg.cc/k4T4mtyF/h-Changelog.png)
 
 #### 12.09.24
 
