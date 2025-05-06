@@ -7,14 +7,14 @@ Adds a portrait to the selected pawns and animals.
 
 # ![How to use](https://i.postimg.cc/jqk53P2R/h-How-To-Use.png)
 
-- Portraits can be set in "Health" tab of a pawn.
-- Images are loaded from "CustomPortraits" folder in RimWorld root directory.  
-  Something like: .../steamapps/common/RimWorld/CustomPortraits
-- You can use a button in mod settings to find it quickly.
-- .jpg, .jpeg, .png images are supported.
-- Nested directories are supported.
-- No need to restart for every file.
-- Textures loaded on demand every time you open portrait dropdown.
+Portraits can be set in "Health" tab of a pawn.  
+Images are loaded from "CustomPortraits" folder in RimWorld root directory.  
+Something like: .../steamapps/common/RimWorld/CustomPortraits  
+You can use a button in mod settings to find it quickly.  
+.jpg, .jpeg, .png images are supported.  
+Nested directories are supported.  
+No need to restart for every file.  
+Textures loaded on demand every time you open portrait dropdown.
 
 # ![Features](https://i.postimg.cc/zBzB6kTG/h-Features.png)
 
@@ -66,9 +66,8 @@ Implemented only for 1.4 and 1.5 versions of the game.
 
 # ![Compatibility](https://i.postimg.cc/3NWwJJSM/h-Compatibility.png)
 
-It is safe to add to an existing game.
-
-It is safe to remove from mid-game.
+- **Safe** to add to an existing game.
+- **Safe** to remove from an existing game.
 
 Errors may be produced on load without a mod. Those can be ignored.
 
@@ -88,7 +87,7 @@ Disabled if [[NL] Custom Portraits](https://steamcommunity.com/sharedfiles/filed
 # ![Screenshots](https://i.postimg.cc/BQLvrbPH/h-Screenshots.png)
 
 HUD: [RimHUD](https://steamcommunity.com/sharedfiles/filedetails/?id=1508850027)  
-Apparel, Weapon, Pawn race: [Kurin, The Three Tailed Fox [Deluxe Edition]](https://steamcommunity.com/sharedfiles/filedetails/?id=2670355481)
+Apparel, Weapon, Pawn race: [Kurin, The Three Tailed Fox [Deluxe Edition]](https://steamcommunity.com/sharedfiles/filedetails/?id=2670355481)  
 Additionally: [[NL] Facial Animation - WIP](https://steamcommunity.com/sharedfiles/filedetails/?id=1635901197), [Camera+](https://steamcommunity.com/sharedfiles/filedetails/?id=867467808), [Graphics Settings+](https://steamcommunity.com/sharedfiles/filedetails/?id=1678847247)  
 Portrait images: MidJourney
 
