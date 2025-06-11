@@ -5,4 +5,5 @@ publish
 *.csproj.user
 *.pubxml.user
 *.dll
+*.pdb
 PublishedFileId.txt

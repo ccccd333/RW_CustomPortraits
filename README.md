@@ -102,6 +102,10 @@ _Normalize presentation of alternatives!_
 
 # ![Changelog](https://i.postimg.cc/k4T4mtyF/h-Changelog.png)
 
+#### 12.06.25
+
+- 1.6.**4488** support.
+
 #### 12.09.24
 
 - Source uploaded to GitHub (link in About.xml)
