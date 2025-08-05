@@ -11,8 +11,7 @@ namespace Foxy.CustomPortraits {
 	public static class Patch_Mod_ColorCodedMoodBar {
 		public static void PatchAll(Harmony h) {
 			Log.Message("[Portraits] Color Coded Mood Bar mod detected.");
-			Log.Warning("[Portraits] Not patching for mod compat - not supported on 1.6 yet.");
-			// Patch_DrawColonist(h);
+			Patch_DrawColonist(h);
 		}
 
 		private static void Patch_DrawColonist(Harmony h) {

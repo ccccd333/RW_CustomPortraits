@@ -10,9 +10,8 @@ namespace Foxy.CustomPortraits {
 	public static class Patch_Mod_LTOColonyGroupsFinal {
 		public static void PatchAll(Harmony h) {
 			Log.Message("[Portraits] Colony Groups mod detected.");
-			Log.Warning("[Portraits] Not patching for mod compat - not supported on 1.6 yet.");
-			// Patch_ColonistGroup(h);
-			// Patch_ColonistBarColonistDrawer(h);
+			Patch_ColonistGroup(h);
+			Patch_ColonistBarColonistDrawer(h);
 		}
 
 		private static void Patch_ColonistGroup(Harmony h) {
