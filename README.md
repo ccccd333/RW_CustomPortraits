@@ -102,6 +102,13 @@ _Normalize presentation of alternatives!_
 
 # ![Changelog](https://i.postimg.cc/k4T4mtyF/h-Changelog.png)
 
+### 06.08.25
+
+- Tested on 1.6.4535.
+- Enabled compatibility for CM Color Coded Mood Bar and[LTO] Colony Groups.
+- Verified compatibility with Pawn Badge Fan Fork, Job In Bar, [NL] Dynamic Portraits, [NL] Custom Portraits.
+- Added mod setting to remove console spam. (Default: disabled)
+
 #### 12.06.25
 
 - 1.6.**4488** support.
