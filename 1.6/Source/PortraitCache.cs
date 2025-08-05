@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CustomPortraits;
 using UnityEngine;
 using Verse;
 
@@ -33,7 +34,7 @@ namespace Foxy.CustomPortraits {
 			foreach (FileInfo file in directory.EnumerateFiles().Where(IsValidPortraitFile)) {
 				string path = GetRelativePath(file);
 				if (Has(path)) continue;
-				Log.Message($"[Portraits] New portrait: {path}");
+				if (Settings.Instance.debug) Log.Message($"[Portraits] New portrait: {path}");
 				byte[] data = File.ReadAllBytes(file.FullName);
 				Texture2D tex = new Texture2D(2, 2);
 				tex.LoadImage(data);

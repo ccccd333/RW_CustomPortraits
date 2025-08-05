@@ -26,6 +26,7 @@ namespace CustomPortraits {
 		public bool actionsBig = false;
 		public int offsetX = 14;
 		public int offsetY = 14;
+		public bool debug = false;
 
 		public override void ExposeData() {
 			Scribe_Values.Look(ref position, "position");
@@ -41,6 +42,7 @@ namespace CustomPortraits {
 			Scribe_Values.Look(ref actionsBig, "actionsBig");
 			Scribe_Values.Look(ref offsetX, "offsetX");
 			Scribe_Values.Look(ref offsetY, "offsetY");
+			Scribe_Values.Look(ref debug, "debug");
 		}
 	}
 }

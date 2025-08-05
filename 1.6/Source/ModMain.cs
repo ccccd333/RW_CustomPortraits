@@ -163,6 +163,13 @@ namespace Foxy.CustomPortraits {
 				listing.ProperOutdent();
 			}
 
+			listing.GapLine();
+			listing.ProperIndent();
+			listing.CheckboxLabeled(Helper.Label("Dev.Label"), ref settings.debug, tooltip: Helper.Label("Dev.Tooltip"));
+			listing.ProperOutdent();
+			listing.Gap();
+
+
 			if (Event.current.type == EventType.Layout) {
 				scrollHeight = listing.CurHeight;
 			}

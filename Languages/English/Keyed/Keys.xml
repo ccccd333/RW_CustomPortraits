@@ -106,4 +106,7 @@
   <Foxy.CustomPortraits.AnimalTooltip>
     This options is disabled for animals
   </Foxy.CustomPortraits.AnimalTooltip>
+
+  <Foxy.CustomPortraits.Dev.Label>Files debug:</Foxy.CustomPortraits.Dev.Label>
+  <Foxy.CustomPortraits.Dev.Tooltip>Print found image filenames to the console.</Foxy.CustomPortraits.Dev.Tooltip>
 </LanguageData>
