@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using Foxy.CustomPortraits.CustomPortraitsEx;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -14,7 +15,10 @@ namespace Foxy.CustomPortraits {
 			if (StaticSettings.IsInspector) {
 				InspectTabBase tab = StaticSettings.ShowWhenInspector ? pane.GetOpenTab() : null;
 				Texture2D tex = pawn.GetPortraitTexture(PortraitPosition.Inspector);
-				if (tex != null) PortraitDrawer.DrawNextToInspector(tex, pane.PaneTopY, tab);
+                string filename = pawn.GetPortraitName(PortraitPosition.Inspector);
+
+                tex = MoodDrivenPortrait.GetPortraitTexture(pawn, filename, tex);
+                if (tex != null) PortraitDrawer.DrawNextToInspector(tex, pane.PaneTopY, tab);
 			}
 			if (StaticSettings.IsTopRight) {
 				Texture2D tex = pawn.GetPortraitTexture(PortraitPosition.TopRight);
