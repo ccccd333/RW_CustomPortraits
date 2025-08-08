@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="Comp_PawnCustomPortrait.cs" />
     <Compile Include="CustomPortraitsEx\MoodDrivenPortrait.cs" />
+    <Compile Include="CustomPortraitsEx\PExSetting.cs" />
     <Compile Include="CustomPortraitsEx\PortraitCacheEx.cs" />
     <Compile Include="CustomPortraitsEx\Refs\MoodRefs.cs" />
     <Compile Include="CustomPortraitsEx\Repository\Group.cs" />
