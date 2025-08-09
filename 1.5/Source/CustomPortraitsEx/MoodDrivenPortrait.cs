@@ -46,7 +46,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         public static Texture2D GetPortraitTexture(Pawn pawn, string filename, Texture2D def)
         {
             //Log.Message($"[PortraitsEx] Try Visible Portrait: {filename}");
-            if (filename != null && filename != "")
+            if (filename != null && filename != "" && PortraitCacheEx.IsAvailable)
             {
                 string preset_name = "";
                 string d = "";
@@ -56,6 +56,12 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 {
                     // たぶんないとは思うけど。
                     return def;
+                }
+
+                if (pawn.RaceProps.Animal || pawn.RaceProps.IsMechanoid) 
+                {
+                    // 動物、メカノイドは対応しない
+                    return def; 
                 }
 
                 bool nextPortrait = false;
@@ -322,6 +328,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             Dictionary<string, float> mood = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
             List<Thought> outThoughts = new List<Thought>();
             pawn.needs.mood.thoughts.GetAllMoodThoughts(outThoughts);
+
             // 心情値の文字と値のリスト化
             foreach (var need in outThoughts)
             {
