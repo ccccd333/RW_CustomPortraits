@@ -33,11 +33,22 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         public static PExSetting Settings = new PExSetting();
 
+        public static bool IsAvailable = false;
+
         public static void Update()
         {
             Log.Message($"[PortraitsEx] Updating cache from directory: {Directory.FullName}");
             if (!Directory.Exists) Directory.Create();
-            ReadDirectory(Directory);
+
+            try
+            {
+                ReadDirectory(Directory);
+            }
+            catch (Exception)
+            {
+                Log.Warning("[PortraitsEx] Failed to load preset.");
+                return;
+            }
 
             try
             {
@@ -49,6 +60,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 Log.Error($"[PortraitsEx] The Setting.json file could not be loaded. : {Directory.FullName + "/Setting.json"}");
                 // json読み込みで失敗したら適当に2秒
                 Settings.DisplayDuration = 2.0f;
+            }
+
+            if (MoodRefs.Count > 0)
+            {
+                IsAvailable = true;
             }
         }
 
