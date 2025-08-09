@@ -10,7 +10,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
     public class Textures
     {
         public bool IsAnimation = false;
-        public float frame_interval = 2.0f;
+        public float display_duration = 2.0f;
         public List<Texture2D> txs = new List<Texture2D>();
     }
 }

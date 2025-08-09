@@ -1,4 +1,5 @@
-﻿using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
+﻿using CustomPortraits;
+using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RimWorld;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Verse;
 using Verse.Noise;
@@ -29,11 +31,25 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         public static DirectoryInfo PresetDirectory { get; } = Directory.CreateSubdirectory("Presets");
 
+        public static PExSetting Settings = new PExSetting();
+
         public static void Update()
         {
             Log.Message($"[PortraitsEx] Updating cache from directory: {Directory.FullName}");
             if (!Directory.Exists) Directory.Create();
             ReadDirectory(Directory);
+
+            try
+            {
+                string json = File.ReadAllText(Directory.FullName + "/Setting.json");
+                Settings = JsonConvert.DeserializeObject<PExSetting>(json);
+            }
+            catch (Exception)
+            {
+                Log.Error($"[PortraitsEx] The Setting.json file could not be loaded. : {Directory.FullName + "/Setting.json"}");
+                // json読み込みで失敗したら適当に2秒
+                Settings.DisplayDuration = 2.0f;
+            }
         }
 
         private static void ReadDirectory(DirectoryInfo directory)
@@ -63,6 +79,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             }
                             
                         }
+                        else if (key == "fallback_mood_on_death")
+                        {
+                            if (value is JValue fallback_mood_on_death)
+                            {
+                                r.fallback_mood_on_death = fallback_mood_on_death.Value.ToString();
+
+                            }
+                        }
                         else if (key == "mood_refs")
                         {
                             Refts(preset_name, key, value, r);
@@ -85,7 +109,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                 }
                 Log.Message($"[PortraitsEx] Result ==> Target preset: {preset_name} MoodRefs Count: {r.txs.Count} Group Filter Count: {r.group_filter.Count} PriorityWeight Count: {r.priority_weights.Count}");
-                MoodRefs.Add(preset_name, r);
+                if (!MoodRefs.ContainsKey(preset_name))
+                {
+                    MoodRefs.Add(preset_name, r);
+                }
+                else
+                {
+                    Log.Warning($"[PortraitsEx] Duplicate preset name detected. ==> Target preset: {preset_name}");
+                }
             }
         }
 
@@ -113,6 +144,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     {
                         var tx = Textures(preset_name, cont, prop_n.Value, r);
                         r.txs.Add(MoodRefs_key, tx);
+                        if (Utility.IsRegexPattern(MoodRefs_key))
+                        {
+                            r.txs_regex_cache.Add(MoodRefs_key, new Regex(MoodRefs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                        }
                     }
                     
                 }
@@ -135,9 +170,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 foreach (var v in (JArray)prop.Value)
                 {
                     var MoodRefs_key = v.ToString();
-                    r.group_filter.Add(MoodRefs_key, g_k);
+                    if (!r.group_filter.ContainsKey(MoodRefs_key))
+                    {
+                        r.group_filter.Add(MoodRefs_key, g_k);
+                        if (Utility.IsRegexPattern(MoodRefs_key)) 
+                        {
+                            r.g_regex_cache.Add(MoodRefs_key, new Regex(MoodRefs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                        }
 
-                    //Log.Message($"[PortraitsEx] Group ==> Target preset: {preset_name} Group Key ==> {g_k} Value ==> {MoodRefs_key}");
+                        Log.Message($"[PortraitsEx] Group ==> Target preset: {preset_name} Group Key ==> {g_k} Value ==> {MoodRefs_key}");
+                    }
                 }
             }
         }
@@ -182,7 +224,20 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                 }
                 //Log.Message($"[PortraitsEx] PriorityWeights ==> Target preset: {preset_name} filter_name: {pw.filter_name} weight: {pw.weight}");
-                r.priority_weights.Add(MoodRefs_key, pw);
+                if (r.priority_weights.ContainsKey(MoodRefs_key))
+                {
+                    Log.Message($"[PortraitsEx] Duplicate priority weights detected. ==> Target preset: {preset_name} Duplicate Key: {MoodRefs_key}");
+                }
+                else
+                {
+                    r.priority_weights.Add(MoodRefs_key, pw);
+
+                    if (Utility.IsRegexPattern(MoodRefs_key))
+                    {
+                        r.pw_regex_cache.Add(MoodRefs_key, new Regex(MoodRefs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                    }
+                }
+
             }
 
             
@@ -207,11 +262,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         tx.IsAnimation = animation_mode.Value<int>() == 0 ? false : true;
                     }
                 }
-                else if (conf == "frame_interval")
+                else if (conf == "display_duration")
                 {
-                    if (prop.Value is JValue frame_interval)
+                    if (prop.Value is JValue display_duration)
                     {
-                        tx.frame_interval = frame_interval.Value<float>();
+                        tx.display_duration = display_duration.Value<float>();
                     }
                 }
                 else if (conf == "files")
@@ -233,13 +288,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             int range_from = 0;
                             int range_to = 0;
                             string d = "";
-                            if (!int.TryParse(Utility.Delimiter(first_file, out d), out range_from))
+                            if (!int.TryParse(Utility.DDelimiter(first_file, out d), out range_from))
                             {
-                                throw new Exception($"The image could not be read. Please choose from png, jpeg, or jpg formats." + preset_name + "." + k);
+                                throw new Exception($"Please make sure to use the DDS (DXT1) format for loading images used in animation." + preset_name + "." + k);
                             }
-                            if (!int.TryParse(Utility.Delimiter(second_file, out d), out range_to))
+                            if (!int.TryParse(Utility.DDelimiter(second_file, out d), out range_to))
                             {
-                                throw new Exception($"The image could not be read. Please choose from png, jpeg, or jpg formats." + preset_name + "." + k);
+                                throw new Exception($"Please make sure to use the DDS (DXT1) format for loading images used in animation." + preset_name + "." + k);
+                            }
+
+                            if (d == "")
+                            {
+                                Log.Error($"[PortraitsEx] Portrait Load Error: Only the DDS(DXT1) image format is supported.");
+                                throw new Exception($"Failed to load image. Processing will end." + preset_name + "." + k);
                             }
 
                             if (range_from > range_to)
@@ -255,27 +316,44 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                                 //Log.Message($"[PortraitsEx] Load Protraits: {f}");
                                 byte[] data = File.ReadAllBytes(f);
-                                Texture2D tex = new Texture2D(2, 2);
-                                if (!tex.LoadImage(data))
-                                {
-                                    Log.Message($"[PortraitsEx] Portrait Load Error: {f}");
-                                    throw new Exception($"Failed to load image. Processing will end." + preset_name + "." + k);
-                                }
+                                int pixel_data_length = data.Length - 128;
+                                byte[] pixel_data = new byte[pixel_data_length];
+                                Buffer.BlockCopy(data, 128, pixel_data, 0, pixel_data_length);
+                                
+                                Texture2D tex = new Texture2D(320, 512, TextureFormat.DXT1, false);
+                                tex.LoadRawTextureData(pixel_data);
+                                
+                                tex.Apply();
                                 tx.txs.Add(tex);
                             }
                         }
                         else
                         {
-                            string tx_filepath = Directory.FullName + "/" + v;
-                            //Log.Message($"[PortraitsEx] Load Protraits: {tx_filepath}");
-                            byte[] data = File.ReadAllBytes(tx_filepath);
-                            Texture2D tex = new Texture2D(2, 2);
-                            if (!tex.LoadImage(data))
+                            string d = "";
+                            Utility.Delimiter(portrait_path, out d);
+
+                            if (d==".dds")
                             {
-                                Log.Message($"[PortraitsEx] Portrait Load Error: {tx_filepath}");
-                                throw new Exception($"Failed to load image. Processing will end." + preset_name + "." + k);
+                                string f = Directory.FullName + "/" + v;
+                                byte[] data = File.ReadAllBytes(f);
+                                int pixel_data_length = data.Length - 128;
+                                byte[] pixel_data = new byte[pixel_data_length];
+                                Buffer.BlockCopy(data, 128, pixel_data, 0, pixel_data_length);
+
+                                Texture2D tex = new Texture2D(320, 512, TextureFormat.DXT1, false);
+                                tex.LoadRawTextureData(pixel_data);
+
+                                tex.Apply();
+                                tx.txs.Add(tex);
                             }
-                            tx.txs.Add(tex);
+                            else
+                            {
+                                string f = Directory.FullName + "/" + v;
+                                byte[] data = File.ReadAllBytes(f);
+                                Texture2D tex = new Texture2D(2, 2);
+                                tex.LoadImage(data);
+                                tx.txs.Add(tex);
+                            }
                         }
                     }
                 }
