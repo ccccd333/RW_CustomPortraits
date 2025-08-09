@@ -290,11 +290,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             string d = "";
                             if (!int.TryParse(Utility.DDelimiter(first_file, out d), out range_from))
                             {
-                                throw new Exception($"The image could not be read. Please choose from png, jpeg, or jpg formats." + preset_name + "." + k);
+                                throw new Exception($"Please make sure to use the DDS (DXT1) format for loading images used in animation." + preset_name + "." + k);
                             }
                             if (!int.TryParse(Utility.DDelimiter(second_file, out d), out range_to))
                             {
-                                throw new Exception($"The image could not be read. Please choose from png, jpeg, or jpg formats." + preset_name + "." + k);
+                                throw new Exception($"Please make sure to use the DDS (DXT1) format for loading images used in animation." + preset_name + "." + k);
                             }
 
                             if (d == "")
@@ -317,11 +317,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 //Log.Message($"[PortraitsEx] Load Protraits: {f}");
                                 byte[] data = File.ReadAllBytes(f);
                                 int pixel_data_length = data.Length - 128;
-                                byte[] pixelData = new byte[pixel_data_length];
-                                Buffer.BlockCopy(data, 128, pixelData, 0, pixel_data_length);
+                                byte[] pixel_data = new byte[pixel_data_length];
+                                Buffer.BlockCopy(data, 128, pixel_data, 0, pixel_data_length);
                                 
-                                Texture2D tex = new Texture2D(300, 450, TextureFormat.DXT1,false);
-                                tex.LoadRawTextureData(pixelData);
+                                Texture2D tex = new Texture2D(320, 512, TextureFormat.DXT1, false);
+                                tex.LoadRawTextureData(pixel_data);
                                 
                                 tex.Apply();
                                 tx.txs.Add(tex);
@@ -329,17 +329,31 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         }
                         else
                         {
-                            string f = Directory.FullName + "/" + v;
-                            byte[] data = File.ReadAllBytes(f);
-                            int pixel_data_length = data.Length - 128;
-                            byte[] pixelData = new byte[pixel_data_length];
-                            Buffer.BlockCopy(data, 128, pixelData, 0, pixel_data_length);
+                            string d = "";
+                            Utility.Delimiter(portrait_path, out d);
 
-                            Texture2D tex = new Texture2D(300, 450, TextureFormat.DXT1, false);
-                            tex.LoadRawTextureData(pixelData);
+                            if (d==".dds")
+                            {
+                                string f = Directory.FullName + "/" + v;
+                                byte[] data = File.ReadAllBytes(f);
+                                int pixel_data_length = data.Length - 128;
+                                byte[] pixel_data = new byte[pixel_data_length];
+                                Buffer.BlockCopy(data, 128, pixel_data, 0, pixel_data_length);
 
-                            tex.Apply();
-                            tx.txs.Add(tex);
+                                Texture2D tex = new Texture2D(320, 512, TextureFormat.DXT1, false);
+                                tex.LoadRawTextureData(pixel_data);
+
+                                tex.Apply();
+                                tx.txs.Add(tex);
+                            }
+                            else
+                            {
+                                string f = Directory.FullName + "/" + v;
+                                byte[] data = File.ReadAllBytes(f);
+                                Texture2D tex = new Texture2D(2, 2);
+                                tex.LoadImage(data);
+                                tx.txs.Add(tex);
+                            }
                         }
                     }
                 }

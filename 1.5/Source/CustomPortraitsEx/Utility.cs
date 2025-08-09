@@ -11,7 +11,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 {
     public static class Utility
     {
-        public static readonly string[] n_type = new[] { ".png", ".jpeg", "jpg" };
+        public static readonly string[] n_type = new[] { ".png", ".jpeg", "jpg", ".dds" };
         public static readonly string[] d_type = new[] { ".dds" };
         public static string Delimiter(string target, out string d)
         {

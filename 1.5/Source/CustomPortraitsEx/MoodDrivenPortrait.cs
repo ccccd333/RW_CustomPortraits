@@ -49,14 +49,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             if (filename != null && filename != "")
             {
                 string preset_name = "";
-                //foreach (string ext in PortraitCacheEx.texture_type)
-                //{
-                //    if (filename.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
-                //    {
-                //        preset_name = filename.Substring(0, filename.Length - ext.Length);
-                //        break;
-                //    }
-                //}
                 string d = "";
                 preset_name = Utility.Delimiter(filename, out d);
 
@@ -124,41 +116,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     else
                     {
                         Dictionary<string, float> mood = BuildMoodDictionary(pawn);
-                        //List<Thought> outThoughts = new List<Thought>();
-                        //pawn.needs.mood.thoughts.GetAllMoodThoughts(outThoughts);
-                        //// 心情値の文字と値のリスト化
-                        //foreach (var need in outThoughts)
-                        //{
-                        //    if (need == null || need.LabelCap == null)
-                        //    {
-                        //        // 豪華な宿舎みたいにstage[0]がnullのものがあったりする。
-                        //        // なのでこれはそれ用
-                        //        Log.Warning($"[PortraitsEx] WARN: need, LabelCap is null");
-                        //        continue;
-                        //    }
-
-                        //    try
-                        //    {
-                        //        // TODO:心情値の値のほうで重みをつけるようにするかもしれない。
-                        //        if (mood.ContainsKey(need.LabelCap))
-                        //        {
-                        //            float weight1 = mood[need.LabelCap];
-                        //            float weight2 = need.MoodOffset();
-                        //            if (weight1 < weight2) mood[need.LabelCap] = weight2;
-                        //        }
-                        //        else
-                        //        {
-                        //            mood.Add(need.LabelCap, need.MoodOffset());
-                        //        }
-                        //    }
-                        //    catch (Exception e)
-                        //    {
-                        //        Log.Warning($"[PortraitsEx] WARN?(Processing will continue) Exception for need.LabelCap={need.LabelCap}: {e}");
-                        //        mood.Add(need.LabelCap, 1.0f);
-                        //    }
-
-                        //}
-
 
                         //foreach(var k in refs.group_filter)
                         //{
@@ -174,37 +131,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         // jsonのグループのキー(Group名)と値(心情値名)の値がmood(心情値の文字と値)のキーと一致する場合
                         // filtered_group_filterに一旦重複してもいいので入れていく。
                         var filtered_group_filter = FilterGroupMatches(refs, mood);
-                        //foreach (var kvp in refs.group_filter)
-                        //{
-                        //    bool match_found = false;
-
-                        //    if (refs.g_regex_cache.ContainsKey(kvp.Key))
-                        //    {
-                        //        var reg = refs.g_regex_cache[kvp.Key];
-                        //        foreach (var mood_key in mood.Keys)
-                        //        {
-                        //            if (reg.IsMatch(mood_key))
-                        //            {
-                        //                match_found = true;
-                        //                break;
-                        //            }
-                        //        }
-
-                        //        if (match_found)
-                        //        {
-                        //            filtered_group_filter.Add(kvp);
-                        //        }
-                        //    }
-                        //    else
-                        //    {
-                        //        if (mood.ContainsKey(kvp.Key)) match_found = true;
-
-                        //        if (match_found)
-                        //        {
-                        //            filtered_group_filter.Add(kvp);
-                        //        }
-                        //    }
-                        //}
 
                         // 心情名一切ない(?)。
                         if (filtered_group_filter.Count() <= 0 && mood.Count() <= 0) return def;
@@ -249,55 +175,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         // jsonのpriority_weightsの上から順にとmerged_keysのキーと突き合わせて行く。
                         // priority_weightsと一致するもののみがmatched_priority_weightsに入る。
                         var matched_priority_weights = ExtractMatchedPriorityWeights(refs, merged_keys);
-                        //    new Dictionary<string, PriorityWeights>(StringComparer.OrdinalIgnoreCase);
-                        //foreach (var kvp in refs.priority_weights)
-                        //{
-                        //    bool match_found = false;
-
-                        //    if (refs.pw_regex_cache.ContainsKey(kvp.Key))
-                        //    {
-                        //        var reg = refs.pw_regex_cache[kvp.Key];
-                        //        var lis = new List<string>();
-
-                        //        foreach (var mk in merged_keys)
-                        //        {
-                        //            if (reg.IsMatch(mk.Key))
-                        //            {
-                        //                lis.Add(mk.Key);
-                        //                match_found = true;
-                        //                break;
-                        //            }
-                        //        }
-
-                        //        if (match_found)
-                        //        {
-                        //            foreach (var elm in lis)
-                        //            {
-                        //                if (!matched_priority_weights.ContainsKey(elm))
-                        //                {
-                        //                    matched_priority_weights.Add(elm, kvp.Value);
-                        //                }
-                        //            }
-                        //        }
-                        //    }
-                        //    else
-                        //    {
-                        //        if (merged_keys.ContainsKey(kvp.Key)) match_found = true;
-
-                        //        if (match_found)
-                        //        {
-                        //            if (!matched_priority_weights.ContainsKey(kvp.Key))
-                        //            {
-                        //                matched_priority_weights.Add(kvp.Key, kvp.Value);
-                        //            }
-                        //        }
-                        //    }
-                        //}
-
-
-                        //refs.priority_weights
-                        //.Where(kvp => merged_keys.ContainsKey(kvp.Key))
-                        //.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                         //int logc = 1;
                         //foreach (var mpw in matched_priority_weights)
@@ -305,7 +182,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         //    Log.Message($"[PortraitsEx] Matched Priority Weights priority: {logc} category ==> {mpw.Value.category} mood ==> {mpw.Value.filter_name} weight: {mpw.Value.weight}");
                         //    ++logc;
                         //}
-
 
                         if (matched_priority_weights.Count() <= 0 && refs.fallback_mood == "")
                         {
