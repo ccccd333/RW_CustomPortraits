@@ -398,7 +398,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 {
                     // 豪華な宿舎みたいにstage[0]がnullのものがあったりする。
                     // なのでこれはそれ用
-                    Log.Warning($"[PortraitsEx] WARN: need, LabelCap is null");
+                    //Log.Warning($"[PortraitsEx] WARN: need, LabelCap is null");
                     continue;
                 }
 

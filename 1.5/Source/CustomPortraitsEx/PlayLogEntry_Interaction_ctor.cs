@@ -1,5 +1,6 @@
 ﻿using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using HarmonyLib;
+using Newtonsoft.Json.Linq;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using Verse;
+using static RimWorld.ColonistBar;
 
 namespace Foxy.CustomPortraits.CustomPortraitsEx
 {
@@ -34,7 +36,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             );
         }
 
-        public static void Prefix(InteractionDef intDef, Pawn initiator, Pawn recipient, List<RulePackDef> extraSentencePacks)
+        public static bool Prefix(InteractionDef intDef, Pawn initiator, Pawn recipient, List<RulePackDef> extraSentencePacks)
         {
             // PlayLog.Add()の引数に使われるPlayLogEntry_Interactionのctorフック
             try
@@ -42,10 +44,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 // 別スレッドかどうか確認しておく ver1.6以降→要確認
                 // もしスレッドIDが違う場合はlock
                 //Log.Message($"Thread ID: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
+                if (!PortraitCacheEx.IsAvailable) return true;
 
-                if (!PortraitCacheEx.IsAvailable) return;
-
-                //Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} initiator {initiator.LabelCap.StripTags()} recipient {recipient.LabelCap.StripTags()}");
+                //Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} initiator {initiator.Name.ToStringFull} recipient {recipient.Name.ToStringFull}");
                 CleanupExpiredAndExcessLogs();
 
                 var ismap = PortraitCacheEx.InteractionSelectionMap;
@@ -75,9 +76,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
             catch (Exception e)
             {
-                // 同姓同名が存在した可能性がある
-                Log.Warning($"[PortraitsEx] An unrecognized error occurred. intDef.LabelCap: {intDef.LabelCap} initiator: {initiator.Name.ToStringFull} recipient {recipient.Name.ToStringFull} ===> wt?: {e.Message}");
+                Log.Message($"[PortraitsEx] Please notify me if this error log is generated. wt ==> {e.Message}");
+                //Log.Warning($"[PortraitsEx] An unrecognized error occurred. intDef.LabelCap: {intDef.LabelCap} initiator: {initiator.Name.ToStringFull} recipient {recipient.Name.ToStringFull} ===> wt?: {e.Message}");
             }
+
+            return true;
         }
 
         public static void CleanupExpiredAndExcessLogs()
@@ -86,7 +89,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 CleanupExpiredAndExcessLogsImpl(InitiatorLogDict, InitiatorLogOrder, PortraitCacheEx.Settings.initiator_log_retention.max_entries);
             }
-
             if (RecipientLogDict.Count > 0)
             {
                 CleanupExpiredAndExcessLogsImpl(RecipientLogDict, RecipientLogOrder, PortraitCacheEx.Settings.recipient_log_retention.max_entries);
@@ -131,23 +133,41 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         private static void PushDict(string label_cap, InteractionFilter filter, Pawn initiator, Pawn recipient)
         {
+            //Log.Message($"[PortraitsEx] PushDict START");
             float cache_duration_seconds = filter.cache_duration_seconds;
+            //Log.Message($"[PortraitsEx] PushDict label_cap: {label_cap} is_initiator: {filter.is_initiator} is_recipient: {filter.is_recipient} matched_initiator_key: {filter.matched_initiator_key} matched_recipient_key: {filter.matched_recipient_key} cache_duration_seconds: {filter.cache_duration_seconds}");
             if (cache_duration_seconds <= 0.0001f) return;
+            //int a = PortraitCacheEx.Settings.initiator_log_retention.max_entries;
+            //Log.Message($"[PortraitsEx] PushDict SEP1");
             if (filter.is_initiator)
             {
-                AddOrUpdate(InitiatorLogDict, InitiatorLogOrder, $"{label_cap}@{initiator.Name.ToStringFull}", filter.matched_initiator_key, initiator, cache_duration_seconds, PortraitCacheEx.Settings.initiator_log_retention.max_entries);
-            }
+                //Log.Message($"[PortraitsEx] PushDict SEP2");
 
+                if (initiator != null &&initiator.Name != null)
+                {
+                    AddOrUpdate(InitiatorLogDict, InitiatorLogOrder, $"{label_cap}@{initiator.Name.ToStringFull}", filter.matched_initiator_key, initiator, cache_duration_seconds, PortraitCacheEx.Settings.initiator_log_retention.max_entries);
+                }
+                //Log.Message($"[PortraitsEx] PushDict SEP3");
+            }
+            //Log.Message($"[PortraitsEx] PushDict SEP4");
             if (filter.is_recipient)
             {
-                AddOrUpdate(RecipientLogDict, RecipientLogOrder, $"{label_cap}@{recipient.Name.ToStringFull}", filter.matched_recipient_key, recipient, cache_duration_seconds, PortraitCacheEx.Settings.recipient_log_retention.max_entries);
+               //Log.Message($"[PortraitsEx] PushDict SEP5");
+                if (recipient != null && recipient.Name != null)
+                {
+                    AddOrUpdate(RecipientLogDict, RecipientLogOrder, $"{label_cap}@{recipient.Name.ToStringFull}", filter.matched_recipient_key, recipient, cache_duration_seconds, PortraitCacheEx.Settings.recipient_log_retention.max_entries);
+                }
+                //Log.Message($"[PortraitsEx] PushDict SEP6");
             }
+            //Log.Message($"[PortraitsEx] PushDict END");
         }
 
         private static void AddOrUpdate(Dictionary<string, PawnCacheEntry> dict, Queue<string> order, string key, string matched_key, Pawn value, float cache_duration_seconds, int max_entries)
         {
+            //Log.Message($"[PortraitsEx] AddOrUpdate START que: {key} matched_key: {matched_key} pawn: {value}");
             if (!dict.ContainsKey(key))
             {
+                //Log.Message($"[PortraitsEx] AddOrUpdate SEP1 que: {key} matched_key: {matched_key} pawn: {value}");
                 if (dict.Count >= max_entries)
                 {
                     string oldestKey = order.Dequeue();
@@ -155,14 +175,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     dict.Remove(oldestKey);
                     //Log.Message($"[PortraitsEx] dict count {dict.Count}");
                 }
+                //Log.Message($"[PortraitsEx] AddOrUpdate SEP2 que: {key} matched_key: {matched_key} pawn: {value}");
                 order.Enqueue(key);
             }
+            //Log.Message($"[PortraitsEx] AddOrUpdate SEP3 que: {key} matched_key: {matched_key} pawn: {value}");
             dict[key] = new PawnCacheEntry(value, matched_key, cache_duration_seconds);
+
+            //Log.Message($"[PortraitsEx] AddOrUpdate END que: {key} matched_key: {matched_key} pawn: {value}");
         }
 
         private static void CleanupExpiredAndExcessLogsImpl(Dictionary<string, PawnCacheEntry> dict, Queue<string> order, int max_entries)
         {
             var now = Time.realtimeSinceStartup;
+            //Log.Message($"[PortraitsEx] CleanupExpiredAndExcessLogs Remove START");
 
             while (order.Count > 0)
             {
@@ -181,6 +206,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     break;
                 }
             }
+
+            //Log.Message($"[PortraitsEx] CleanupExpiredAndExcessLogs Remove END");
         }
     }
 }
