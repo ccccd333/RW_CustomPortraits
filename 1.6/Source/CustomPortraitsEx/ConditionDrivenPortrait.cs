@@ -5,6 +5,7 @@ using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -14,7 +15,7 @@ using Verse;
 namespace Foxy.CustomPortraits.CustomPortraitsEx
 {
 
-    public static class MoodDrivenPortrait
+    public static class ConditionDrivenPortrait
     {
         private static List<Texture2D> temp = new List<Texture2D>();
         private static int temp_index = 0;
@@ -25,7 +26,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
 
         private static float last_update_time = Time.realtimeSinceStartup;
-        private static float frame_interval = 0.1f;
+        private static float seconds_interval = 0.1f;
 
         private static float disp_last_update_time = Time.realtimeSinceStartup;
 
@@ -36,7 +37,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             temp_refs_key = "";
             temp_animation_mode = false;
             temp_preset_name = "";
-            temp_display_duration = PortraitCacheEx.Settings.DisplayDuration;
+            temp_display_duration = PortraitCacheEx.Settings.display_duration;
             last_update_time = Time.realtimeSinceStartup;
             disp_last_update_time = Time.realtimeSinceStartup;
         }
@@ -58,22 +59,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     return def;
                 }
 
-                if (pawn.RaceProps.Animal || pawn.RaceProps.IsMechanoid) 
-                {
-                    // 動物、メカノイドは対応しない
-                    return def; 
-                }
-
                 bool nextPortrait = false;
                 // ゲーム内時間だとFPSに依存してしまうのでUnityの内部タイマーでフレーム計算する
                 float currentTime = Time.realtimeSinceStartup;
-                if (currentTime - last_update_time >= frame_interval)
+                if (currentTime - last_update_time >= seconds_interval)
                 {
                     // 大体60FPSで4フレーム目くらいで次の画像表示する
                     nextPortrait = true;
                     last_update_time = currentTime;
                 }
-                var mood_refs = PortraitCacheEx.MoodRefs;
+                var mood_refs = PortraitCacheEx.Refs;
                 if (mood_refs.ContainsKey(preset_name))
                 {
 
@@ -109,7 +104,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                     var refs = mood_refs[preset_name];
 
-                    
+
                     string mood_name = "";
 
                     if (pawn.Dead)
@@ -121,8 +116,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                     else
                     {
-                        Dictionary<string, float> mood = BuildMoodDictionary(pawn);
+                        Dictionary<string, float> affection_impact_map;
+                        bool is_value_fetched = false;
+                        affection_impact_map = BuildAffectionImpactMap(pawn, out is_value_fetched);
 
+                        if (!is_value_fetched)
+                        {
+                            Reset();
+                            return def;
+                        }
                         //foreach(var k in refs.group_filter)
                         //{
                         //    Log.Message($"[PortraitsEx] refs.group_filter ==> Key {k.Key} Value {k.Value}");
@@ -134,14 +136,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         //}
 
 
-                        // jsonのグループのキー(Group名)と値(心情値名)の値がmood(心情値の文字と値)のキーと一致する場合
+                        // jsonのグループのキー(Group名)と値(心情+社交名)mood_and_last_social(心情+社交の文字と値)のキーと一致する場合
                         // filtered_group_filterに一旦重複してもいいので入れていく。
-                        var filtered_group_filter = FilterGroupMatches(refs, mood);
+                        var filtered_group_filter = FilterGroupMatches(refs, affection_impact_map);
 
-                        // 心情名一切ない(?)。
-                        if (filtered_group_filter.Count() <= 0 && mood.Count() <= 0) return def;
+                        // 心情+社交が一切ない(?)。
+                        if (filtered_group_filter.Count() <= 0 && affection_impact_map.Count() <= 0) return def;
 
-                        
+
                         var matched_group = new Dictionary<string, List<string>>();
 
                         // filtered_group_filterをキー：値のものを、値：キーにしていく。
@@ -157,9 +159,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             //Log.Message($"[PortraitsEx] aaaa mood: {kvp.Value} {kvp.Key}");
                         }
 
-                        var merged_keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        var merged_keys = new Dictionary<string, string>();
                         // mood側を先に入れる（値はnull）
-                        foreach (var kvp in mood)
+                        foreach (var kvp in affection_impact_map)
                         {
                             //Log.Message($"[PortraitsEx] pic mood: {kvp.Key}");
                             merged_keys[kvp.Key] = null;
@@ -173,7 +175,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             merged_keys[kvp.Key] = kvp.Key;
                         }
 
-                        //foreach (var test in mergedKeys)
+                        //foreach (var test in merged_keys)
                         //{
                         //    Log.Message($"[PortraitsEx] bbb mood: {test.Key} {test.Value}");
                         //}
@@ -185,87 +187,104 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         //int logc = 1;
                         //foreach (var mpw in matched_priority_weights)
                         //{
-                        //    Log.Message($"[PortraitsEx] Matched Priority Weights priority: {logc} category ==> {mpw.Value.category} mood ==> {mpw.Value.filter_name} weight: {mpw.Value.weight}");
-                        //    ++logc;
+                        //    foreach (var kvp in mpw)
+                        //    {
+                        //        Log.Message($"[PortraitsEx] Matched Priority Weights priority: {logc} category ==> {kvp.Value.category} mood ==> {kvp.Value.filter_name} weight: {kvp.Value.weight}");
+                        //        ++logc;
+                        //    }
                         //}
 
-                        if (matched_priority_weights.Count() <= 0 && refs.fallback_mood == "")
+
+                        // matched_priority_weightsの始まりから順に優先となっているので、
+                        // weightとランダム結果を比べて、weight以下だったらその名前を後続へ。
+                        foreach (var elm in matched_priority_weights)
                         {
-                            return def;
-                        }
-                        else if (matched_priority_weights.Count() > 0)
-                        {
-                            // matched_priority_weightsの始まりから順に優先となっているので、
-                            // weightとランダム結果を比べて、weight以下だったらその名前を後続へ。
-                            foreach (var elm in matched_priority_weights)
+                            bool pic = false;
+                            foreach (var kvp in elm)
                             {
-                                int weight = elm.Value.weight;
+                                int weight = kvp.Value.weight;
                                 int seed = UnityEngine.Random.Range(0, 100);
-                                Log.Message($"[PortraitsEx] name: {elm.Value.filter_name} seed: {seed} weight: {weight}");
+                                Log.Message($"[PortraitsEx] name: {kvp.Value.filter_name} seed: {seed} weight: {weight}");
                                 if (seed < weight)
                                 {
-                                    mood_name = elm.Value.filter_name;
-
+                                    mood_name = kvp.Value.filter_name;
+                                    pic = true;
                                     break;
                                 }
                             }
+
+                            if (pic)
+                            {
+                                break;
+                            }
                         }
+
 
                         //Log.Message($"[PortraitsEx] mood_name: {mood_name} ");
 
-                        // 抽出した心情値名がなければ、jsonのfallback_moodを使う。
+                        // 抽出した心情+社交値名がなければ、jsonのfallback_moodを使う。
                         if (mood_name == "")
                         {
                             if (refs.fallback_mood == "")
                             {
-                                return def;
+                                mood_name = "def";
                             }
-                            mood_name = refs.fallback_mood;
+                            else
+                            {
+                                mood_name = refs.fallback_mood;
+                            }
                         }
                     }
                     //Log.Message($"[PortraitsEx] mood_name2: {mood_name} ");
 
                     if (mood_name != temp_refs_key)
                     {
-                        // 心情値名と既に退避済みの心情値名が一致しないとき
+                        // 心情+社交名と既に退避済みの心情+社交名が一致しないとき
                         Reset();
                         string access_key = "";
 
                         if (refs.MatchDictKeysByRegex(mood_name, out access_key))
                         {
-                            // 心情値名とjsonのmood_refsのキー名と一致するものがあるとき
-                            // 次回から同じ重い処理しないようにするため、画像表示用の変数を退避する。
-                            var txs = refs.txs;
-                            var tt = txs[access_key];
-                            temp = tt.txs;
-                            temp_animation_mode = tt.IsAnimation;
-                            temp_index = 0;
-                            temp_preset_name = preset_name;
-                            temp_refs_key = access_key;
-                            temp_display_duration = tt.display_duration;
-                            //Log.Message($"[PortraitsEx] preset_name {temp_preset_name} disp_d {temp_display_duration}");
-                            if (temp.Count <= 0)
-                            {
-                                return ImageLoadError(preset_name, def);
-                            }
-                            else
-                            {
-                                if (temp.Count <= 0) return ImageLoadError(preset_name, def);
+                            return CacheTextureIfKeyMatches(def, refs, preset_name, access_key);
 
-                                Texture2D texture = temp[temp_index];
-                                if (temp_animation_mode) ++temp_index;
+                            //var txs = refs.txs;
+                            //var tt = txs[access_key];
+                            //temp = tt.txs;
+                            //temp_animation_mode = tt.IsAnimation;
+                            //temp_index = 0;
+                            //temp_preset_name = preset_name;
+                            //temp_refs_key = access_key;
+                            //temp_display_duration = tt.display_duration;
+                            ////Log.Message($"[PortraitsEx] preset_name {temp_preset_name} disp_d {temp_display_duration}");
+                            //if (temp.Count <= 0)
+                            //{
+                            //    return ImageLoadError(preset_name, def);
+                            //}
+                            //else
+                            //{
+                            //    if (temp.Count <= 0) return ImageLoadError(preset_name, def);
 
-                                if (texture == null)
-                                {
-                                    Log.Error("[PortraitsEx] The image was successfully generated, but disappeared at the point when it was registered in the dictionary.");
-                                    return ImageLoadError(preset_name, def);
-                                }
-                                return texture;
-                            }
+                            //    Texture2D texture = temp[temp_index];
+                            //    if (temp_animation_mode) ++temp_index;
+
+                            //    if (texture == null)
+                            //    {
+                            //        Log.Error("[PortraitsEx] The image was successfully generated, but disappeared at the point when it was registered in the dictionary.");
+                            //        return ImageLoadError(preset_name, def);
+                            //    }
+                            //    return texture;
+                            //}
                         }
                         else
                         {
-                            return ImageLoadError(preset_name, def);
+                            if (refs.fallback_mood != "" && refs.MatchDictKeysByRegex(refs.fallback_mood, out access_key))
+                            {
+                                return CacheTextureIfKeyMatches(def, refs, preset_name, access_key);
+                            }
+                            else
+                            {
+                                return ImageLoadError(preset_name, def);
+                            }
                         }
                     }
                     else
@@ -285,6 +304,39 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
 
             return def;
+        }
+
+        private static Texture2D CacheTextureIfKeyMatches(Texture2D def, Refs refs, string preset_name, string access_key)
+        {
+            // 心情+社交値名とjsonのmood_refsのキー名と一致するものがあるとき
+            // 次回から同じ重い処理しないようにするため、画像表示用の変数を退避する。
+            var txs = refs.txs;
+            var tt = txs[access_key];
+            temp = tt.txs;
+            temp_animation_mode = tt.IsAnimation;
+            temp_index = 0;
+            temp_preset_name = preset_name;
+            temp_refs_key = access_key;
+            temp_display_duration = tt.display_duration;
+            //Log.Message($"[PortraitsEx] preset_name {temp_preset_name} disp_d {temp_display_duration}");
+            if (temp.Count <= 0)
+            {
+                return ImageLoadError(preset_name, def);
+            }
+            else
+            {
+                if (temp.Count <= 0) return ImageLoadError(preset_name, def);
+
+                Texture2D texture = temp[temp_index];
+                if (temp_animation_mode) ++temp_index;
+
+                if (texture == null)
+                {
+                    Log.Error("[PortraitsEx] The image was successfully generated, but disappeared at the point when it was registered in the dictionary.");
+                    return ImageLoadError(preset_name, def);
+                }
+                return texture;
+            }
         }
 
         private static Texture2D AdvanceToNextPortrait(Texture2D def)
@@ -323,13 +375,23 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
         }
 
-        private static Dictionary<string, float> BuildMoodDictionary(Pawn pawn)
+        private static Dictionary<string, float> BuildAffectionImpactMap(Pawn pawn, out bool is_value_fetched)
         {
-            Dictionary<string, float> mood = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
-            List<Thought> outThoughts = new List<Thought>();
-            pawn.needs.mood.thoughts.GetAllMoodThoughts(outThoughts);
+            // 別スレッドかどうか確認しておく ver1.6以降→要確認
+            //Log.Message($"Thread ID: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
 
-            // 心情値の文字と値のリスト化
+            is_value_fetched = false;
+            Dictionary<string, float> affection_impact_map = new Dictionary<string, float>();
+            List<Thought> outThoughts = new List<Thought>();
+            var thoughts = pawn.needs?.mood?.thoughts;
+
+            // メカノイドなどは心情を持たない
+            if (thoughts == null) { return affection_impact_map; }
+
+            thoughts.GetAllMoodThoughts(outThoughts);
+
+
+            // 心情の文字と値のリスト化
             foreach (var need in outThoughts)
             {
                 if (need == null || need.LabelCap == null)
@@ -342,27 +404,41 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                 try
                 {
-                    // TODO:心情値の値のほうで重みをつけるようにするかもしれない。
-                    if (mood.ContainsKey(need.LabelCap))
+                    // TODO:心情の値のほうで重みをつけるようにするかもしれない。
+                    if (affection_impact_map.ContainsKey(need.LabelCap))
                     {
-                        float weight1 = mood[need.LabelCap];
+                        float weight1 = affection_impact_map[need.LabelCap];
                         float weight2 = need.MoodOffset();
-                        if (weight1 < weight2) mood[need.LabelCap] = weight2;
+                        if (weight1 < weight2) affection_impact_map[need.LabelCap] = weight2;
                     }
                     else
                     {
-                        mood.Add(need.LabelCap, need.MoodOffset());
+                        affection_impact_map.Add(need.LabelCap, need.MoodOffset());
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Log.Warning($"[PortraitsEx] WARN?(Processing will continue) Exception for need.LabelCap={need.LabelCap}: {e}");
-                    mood.Add(need.LabelCap, 1.0f);
+                    //Log.Warning($"[PortraitsEx] WARN?(Processing will continue) Exception for need.LabelCap={need.LabelCap}: {e}");
+                    affection_impact_map.Add(need.LabelCap, 1.0f);
                 }
 
             }
 
-            return mood;
+            is_value_fetched = true;
+
+            // インタラクションで、ポーンがかかわったことを返却する
+            PlayLogEntry_Interaction_ctor.CleanupExpiredAndExcessLogs();
+            List<string> pawn_interaction_list = PlayLogEntry_Interaction_ctor.GetAllKeysByPawnTrimmedFinal(pawn);
+
+            foreach (var key in pawn_interaction_list)
+            {
+                if (!affection_impact_map.ContainsKey(key))
+                {
+                    affection_impact_map[key] = 1.0f;
+                }
+            }
+
+            return affection_impact_map;
         }
 
         private static List<KeyValuePair<string, string>> FilterGroupMatches(Refs refs, Dictionary<string, float> mood)
@@ -403,16 +479,18 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             return filtered_group_filter;
         }
 
-        private static Dictionary<string, PriorityWeights> ExtractMatchedPriorityWeights(Refs refs, Dictionary<string, string> merged_keys)
+        private static List<Dictionary<string, PriorityWeights>> ExtractMatchedPriorityWeights(Refs refs, Dictionary<string, string> merged_keys)
         {
-            var matched_priority_weights = new Dictionary<string, PriorityWeights>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kvp in refs.priority_weights)
+            var matched_priority_weights = new List<Dictionary<string, PriorityWeights>>();
+            foreach (var kp in refs.priority_weight_order)
             {
                 bool match_found = false;
 
-                if (refs.pw_regex_cache.ContainsKey(kvp.Key))
+                var vp = refs.priority_weights[kp];
+                Dictionary<string, PriorityWeights> dict = new Dictionary<string, PriorityWeights>();
+                if (refs.pw_regex_cache.ContainsKey(kp))
                 {
-                    var reg = refs.pw_regex_cache[kvp.Key];
+                    var reg = refs.pw_regex_cache[kp];
                     var lis = new List<string>();
 
                     foreach (var mk in merged_keys)
@@ -429,25 +507,27 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     {
                         foreach (var elm in lis)
                         {
-                            if (!matched_priority_weights.ContainsKey(elm))
+                            if (!dict.ContainsKey(elm))
                             {
-                                matched_priority_weights.Add(elm, kvp.Value);
+                                dict.Add(elm, vp);
                             }
                         }
                     }
                 }
                 else
                 {
-                    if (merged_keys.ContainsKey(kvp.Key)) match_found = true;
+                    if (merged_keys.ContainsKey(kp)) match_found = true;
 
                     if (match_found)
                     {
-                        if (!matched_priority_weights.ContainsKey(kvp.Key))
+                        if (!dict.ContainsKey(kp))
                         {
-                            matched_priority_weights.Add(kvp.Key, kvp.Value);
+                            dict.Add(kp, vp);
                         }
                     }
                 }
+
+                matched_priority_weights.Add(dict);
             }
 
             return matched_priority_weights;
@@ -461,7 +541,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             temp_index = 0;
             temp_preset_name = preset_name;
             temp_refs_key = "def";
-            temp_display_duration = PortraitCacheEx.Settings.DisplayDuration;
+            temp_display_duration = PortraitCacheEx.Settings.display_duration;
 
             return def;
         }

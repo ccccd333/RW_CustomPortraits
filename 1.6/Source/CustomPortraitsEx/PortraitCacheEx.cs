@@ -1,18 +1,12 @@
-﻿using CustomPortraits;
-using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
+﻿using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using Verse;
-using Verse.Noise;
-using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Foxy.CustomPortraits.CustomPortraitsEx
@@ -21,10 +15,12 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
     public static class PortraitCacheEx
     {
 
-        public static Dictionary<string, Refs> MoodRefs = new Dictionary<string, Refs>(StringComparer.OrdinalIgnoreCase);
+        public static Dictionary<string, Refs> Refs = new Dictionary<string, Refs>(StringComparer.OrdinalIgnoreCase);
 
-        
-        private static readonly string setting = "setting.json";
+        public static InteractionSelectionMap InteractionSelectionMap = new InteractionSelectionMap();
+
+
+        private static readonly string Setting = "Setting.json";
 
         private static DirectoryInfo RimWorldRootDirectory { get; } = new DirectoryInfo(GenFilePaths.ModsFolderPath).Parent;
         public static DirectoryInfo Directory { get; } = RimWorldRootDirectory.CreateSubdirectory("CustomPortraitsEx");
@@ -52,17 +48,17 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
             try
             {
-                string json = File.ReadAllText(Directory.FullName + "/Setting.json");
+                string json = File.ReadAllText(Directory.FullName + "/" + Setting);
                 Settings = JsonConvert.DeserializeObject<PExSetting>(json);
             }
             catch (Exception)
             {
                 Log.Error($"[PortraitsEx] The Setting.json file could not be loaded. : {Directory.FullName + "/Setting.json"}");
                 // json読み込みで失敗したら適当に2秒
-                Settings.DisplayDuration = 2.0f;
+                Settings.display_duration = 2.0f;
             }
 
-            if (MoodRefs.Count > 0)
+            if (Refs.Count > 0)
             {
                 IsAvailable = true;
             }
@@ -77,9 +73,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 JObject root = JObject.Parse(File.ReadAllText(@file.FullName));
                 string preset_name = root["preset_name"].ToString();
-                Refs r = new MoodRefs();
+                Refs r = new Refs();
 
-                foreach (var token in root["mood"])
+                foreach (var token in root["conditions"])
                 {
                     var mood_prop = (JProperty)token;
                     string key = mood_prop.Name;
@@ -103,9 +99,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                             }
                         }
-                        else if (key == "mood_refs")
+                        else if (key == "refs")
                         {
                             Refts(preset_name, key, value, r);
+                        }
+                        else if(key == "interaction_filter")
+                        {
+                            InteractionFilter(preset_name, key, value, r);
                         }
                         else if (key == "group")
                         {
@@ -124,10 +124,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         throw new Exception("The preset JSON definition is incorrect." + preset_name + " [wt?]: " + e.Message);
                     }
                 }
-                Log.Message($"[PortraitsEx] Result ==> Target preset: {preset_name} MoodRefs Count: {r.txs.Count} Group Filter Count: {r.group_filter.Count} PriorityWeight Count: {r.priority_weights.Count}");
-                if (!MoodRefs.ContainsKey(preset_name))
+                Log.Message($"[PortraitsEx] Result ==> Target preset: {preset_name} Refs Count: {r.txs.Count} Group Filter Count: {r.group_filter.Count} PriorityWeight Count: {r.priority_weights.Count}");
+                if (!Refs.ContainsKey(preset_name))
                 {
-                    MoodRefs.Add(preset_name, r);
+                    Refs.Add(preset_name, r);
                 }
                 else
                 {
@@ -144,9 +144,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 var prop = (JProperty)token;
 
-                string MoodRefs_key = prop.Name;
+                string Refs_key = prop.Name;
 
-                //Log.Message($"[PortraitsEx] Refts ==> Target preset: {preset_name} ==> {MoodRefs_key}");
+                //Log.Message($"[PortraitsEx] Refts ==> Target preset: {preset_name} ==> {Refs_key}");
                 JToken value = prop.Value;
 
                 foreach (var token_n in value)
@@ -154,15 +154,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     var prop_n = (JProperty)token_n;
                     string cont = prop_n.Name;
 
-                    //Log.Message($"[PortraitsEx] Refts ==> Target preset: {preset_name} ==> {MoodRefs_key} ==> {cont}");
+                    //Log.Message($"[PortraitsEx] Refts ==> Target preset: {preset_name} ==> {Refs_key} ==> {cont}");
 
                     if (cont == "textures")
                     {
                         var tx = Textures(preset_name, cont, prop_n.Value, r);
-                        r.txs.Add(MoodRefs_key, tx);
-                        if (Utility.IsRegexPattern(MoodRefs_key))
+                        r.txs.Add(Refs_key, tx);
+                        if (Utility.IsRegexPattern(Refs_key))
                         {
-                            r.txs_regex_cache.Add(MoodRefs_key, new Regex(MoodRefs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                            r.txs_regex_cache.Add(Refs_key, new Regex(Refs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
                         }
                     }
                     
@@ -171,6 +171,76 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
         }
 
+        private static void InteractionFilter(string preset_name, string k, JToken n, Refs r)
+        {
+            Log.Message($"[PortraitsEx] InteractionFilter ==> Target preset: {preset_name}");
+
+            foreach (var token in n)
+            {
+                InteractionFilter intf = new InteractionFilter();
+                var prop = (JProperty)token;
+
+                string intf_key = prop.Name;
+
+                //Log.Message($"[PortraitsEx] Refts ==> Target preset: {preset_name} ==> {Refs_key}");
+                JToken value = prop.Value;
+
+                foreach (var token_n in value)
+                {
+                    var prop_n = (JProperty)token_n;
+                    string cont = prop_n.Name;
+
+                    //Log.Message($"[PortraitsEx] Refts ==> Target preset: {preset_name} ==> {Refs_key} ==> {cont}");
+
+                    if (cont == "is_recipient")
+                    {
+                        if (prop_n.Value is JValue is_recipient)
+                        {
+                            intf.is_recipient = is_recipient.Value<int>() == 1?true: false;
+                        }
+                    }
+                    else if (cont == "matched_recipient_key")
+                    {
+                        if (prop_n.Value is JValue matched_recipient_key)
+                        {
+                            intf.matched_recipient_key = matched_recipient_key.Value<string>() ?? "";
+                        }
+                    }
+                    else if (cont == "is_initiator")
+                    {
+                        if (prop_n.Value is JValue is_initiator)
+                        {
+                            intf.is_initiator = is_initiator.Value<int>() == 1 ? true : false;
+                        }
+                    }
+                    else if (cont == "matched_initiator_key")
+                    {
+                        if (prop_n.Value is JValue matched_initiator_key)
+                        {
+                            intf.matched_initiator_key = matched_initiator_key.Value<string>() ?? "";
+                        }
+                    }
+                    else if (cont == "cache_duration_seconds")
+                    {
+                        if (prop_n.Value is JValue cache_duration_seconds)
+                        {
+                            float val;
+                            if (!float.TryParse(cache_duration_seconds.ToString(), out val))
+                            {
+                                val = 12.0f;
+                            }
+                            intf.cache_duration_seconds = val;
+                        }
+                    }
+
+                }
+                InteractionSelectionMap.InteractionFilter.Add(intf_key, intf);
+                if (Utility.IsRegexPattern(intf_key))
+                {
+                    InteractionSelectionMap.intf_regex_cache.Add(intf_key, new Regex(intf_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                }
+            }
+        }
         private static void Group(string preset_name, string k, JToken n, Refs r)
         {
             Log.Message($"[PortraitsEx] Group ==> Target preset: {preset_name}");
@@ -185,16 +255,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                 foreach (var v in (JArray)prop.Value)
                 {
-                    var MoodRefs_key = v.ToString();
-                    if (!r.group_filter.ContainsKey(MoodRefs_key))
+                    var Refs_key = v.ToString();
+                    if (!r.group_filter.ContainsKey(Refs_key))
                     {
-                        r.group_filter.Add(MoodRefs_key, g_k);
-                        if (Utility.IsRegexPattern(MoodRefs_key)) 
+                        r.group_filter.Add(Refs_key, g_k);
+                        if (Utility.IsRegexPattern(Refs_key)) 
                         {
-                            r.g_regex_cache.Add(MoodRefs_key, new Regex(MoodRefs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                            r.g_regex_cache.Add(Refs_key, new Regex(Refs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
                         }
 
-                        Log.Message($"[PortraitsEx] Group ==> Target preset: {preset_name} Group Key ==> {g_k} Value ==> {MoodRefs_key}");
+                        Log.Message($"[PortraitsEx] Group ==> Target preset: {preset_name} Group Key ==> {g_k} Value ==> {Refs_key}");
                     }
                 }
             }
@@ -208,11 +278,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 PriorityWeights pw = new PriorityWeights();
                 var obj = (JProperty)v;
-                string MoodRefs_key = obj.Name;
+                string Refs_key = obj.Name;
 
                 JToken wvalue = obj.Value;
 
-                pw.filter_name = MoodRefs_key;
+                pw.filter_name = Refs_key;
                 foreach (var vvv in wvalue)
                 {
                     var nw = (JProperty)vvv;
@@ -240,17 +310,17 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                 }
                 //Log.Message($"[PortraitsEx] PriorityWeights ==> Target preset: {preset_name} filter_name: {pw.filter_name} weight: {pw.weight}");
-                if (r.priority_weights.ContainsKey(MoodRefs_key))
+                if (r.priority_weights.ContainsKey(Refs_key))
                 {
-                    Log.Message($"[PortraitsEx] Duplicate priority weights detected. ==> Target preset: {preset_name} Duplicate Key: {MoodRefs_key}");
+                    Log.Message($"[PortraitsEx] Duplicate priority weights detected. ==> Target preset: {preset_name} Duplicate Key: {Refs_key}");
                 }
                 else
                 {
-                    r.priority_weights.Add(MoodRefs_key, pw);
-
-                    if (Utility.IsRegexPattern(MoodRefs_key))
+                    r.priority_weights.Add(Refs_key, pw);
+                    r.priority_weight_order.Add(Refs_key);
+                    if (Utility.IsRegexPattern(Refs_key))
                     {
-                        r.pw_regex_cache.Add(MoodRefs_key, new Regex(MoodRefs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
+                        r.pw_regex_cache.Add(Refs_key, new Regex(Refs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
                     }
                 }
 
