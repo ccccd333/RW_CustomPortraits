@@ -41,11 +41,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 // 別スレッドかどうか確認しておく ver1.6以降→要確認
                 // もしスレッドIDが違う場合はlock
-                Log.Message($"Thread ID: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
+                //Log.Message($"Thread ID: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
 
                 if (!PortraitCacheEx.IsAvailable) return;
 
-                Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} initiator {initiator.LabelCap.StripTags()} recipient {recipient.LabelCap.StripTags()}");
+                //Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} initiator {initiator.LabelCap.StripTags()} recipient {recipient.LabelCap.StripTags()}");
                 CleanupExpiredAndExcessLogs();
 
                 var ismap = PortraitCacheEx.InteractionSelectionMap;
@@ -53,13 +53,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 {
                     var filter = intef.Value;
                     if (!filter.is_recipient && !filter.is_initiator) continue;
-                    Log.Message($"[PortraitsEx] intef.Key {intef.Key}");
+                    //Log.Message($"[PortraitsEx] intef.Key {intef.Key}");
                     if (ismap.intf_regex_cache.ContainsKey(intef.Key))
                     {
                         var reg = ismap.intf_regex_cache[intef.Key];
                         if (reg.IsMatch(intDef.LabelCap))
                         {
-                            Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} intef.Key {intef.Key}");
+                            //Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} intef.Key {intef.Key}");
                             PushDict(intDef.LabelCap, filter, initiator, recipient);
                         }
                     }
@@ -67,7 +67,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     {
                         if (intDef.LabelCap == intef.Key)
                         {
-                            Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} intef.Key {intef.Key}");
+                            //Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} intef.Key {intef.Key}");
                             PushDict(intDef.LabelCap, filter, initiator, recipient);
                         }
                     }
@@ -95,15 +95,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         public static List<string> GetAllKeysByPawnTrimmedFinal(Pawn targetPawn)
         {
-            foreach (var kvp in RecipientLogDict)
-            {
-                Log.Message($"[PortraitsEx] {kvp.Key} matched_key: {kvp.Value.matched_key} {kvp.Value.pawn}");
-            }
+            //foreach (var kvp in RecipientLogDict)
+            //{
+            //    Log.Message($"[PortraitsEx] {kvp.Key} matched_key: {kvp.Value.matched_key} {kvp.Value.pawn}");
+            //}
 
-            foreach (var kvp in InitiatorLogDict)
-            {
-                Log.Message($"[PortraitsEx] {kvp.Key} matched_key: {kvp.Value.matched_key} {kvp.Value.pawn}");
-            }
+            //foreach (var kvp in InitiatorLogDict)
+            //{
+            //    Log.Message($"[PortraitsEx] {kvp.Key} matched_key: {kvp.Value.matched_key} {kvp.Value.pawn}");
+            //}
 
             var recipient_keys = RecipientLogDict
                 .Where(kvp => kvp.Value.pawn == targetPawn)
@@ -151,9 +151,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 if (dict.Count >= max_entries)
                 {
                     string oldestKey = order.Dequeue();
-                    Log.Message($"[PortraitsEx] Dequeue oldestKey: {oldestKey} que: {key} matched_key: {matched_key} pawn: {value}");
+                    //Log.Message($"[PortraitsEx] Dequeue oldestKey: {oldestKey} que: {key} matched_key: {matched_key} pawn: {value}");
                     dict.Remove(oldestKey);
-                    Log.Message($"[PortraitsEx] dict count {dict.Count}");
+                    //Log.Message($"[PortraitsEx] dict count {dict.Count}");
                 }
                 order.Enqueue(key);
             }
@@ -172,7 +172,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                 if (isExpired || isOverMax)
                 {
-                    Log.Message($"[PortraitsEx] CleanupExpiredAndExcessLogs Remove ==> oldestKey: {oldestKey} now: {now} cached_at: {entry.cached_at} cache_duration_seconds:{entry.cache_duration_seconds}");
+                    //Log.Message($"[PortraitsEx] CleanupExpiredAndExcessLogs Remove ==> oldestKey: {oldestKey} now: {now} cached_at: {entry.cached_at} cache_duration_seconds:{entry.cache_duration_seconds}");
                     order.Dequeue();
                     dict.Remove(oldestKey);
                 }

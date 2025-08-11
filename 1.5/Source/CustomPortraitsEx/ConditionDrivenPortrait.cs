@@ -184,15 +184,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         // priority_weightsと一致するもののみがmatched_priority_weightsに入る。
                         var matched_priority_weights = ExtractMatchedPriorityWeights(refs, merged_keys);
 
-                        int logc = 1;
-                        foreach (var mpw in matched_priority_weights)
-                        {
-                            foreach (var kvp in mpw)
-                            {
-                                Log.Message($"[PortraitsEx] Matched Priority Weights priority: {logc} category ==> {kvp.Value.category} mood ==> {kvp.Value.filter_name} weight: {kvp.Value.weight}");
-                                ++logc;
-                            }
-                        }
+                        //int logc = 1;
+                        //foreach (var mpw in matched_priority_weights)
+                        //{
+                        //    foreach (var kvp in mpw)
+                        //    {
+                        //        Log.Message($"[PortraitsEx] Matched Priority Weights priority: {logc} category ==> {kvp.Value.category} mood ==> {kvp.Value.filter_name} weight: {kvp.Value.weight}");
+                        //        ++logc;
+                        //    }
+                        //}
 
 
                         // matched_priority_weightsの始まりから順に優先となっているので、
@@ -204,7 +204,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             {
                                 int weight = kvp.Value.weight;
                                 int seed = UnityEngine.Random.Range(0, 100);
-                                Log.Message($"[PortraitsEx] name: {kvp.Value.filter_name} seed: {seed} weight: {weight}");
+                                //Log.Message($"[PortraitsEx] name: {kvp.Value.filter_name} seed: {seed} weight: {weight}");
                                 if (seed < weight)
                                 {
                                     mood_name = kvp.Value.filter_name;
@@ -378,7 +378,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         private static Dictionary<string, float> BuildAffectionImpactMap(Pawn pawn, out bool is_value_fetched)
         {
             // 別スレッドかどうか確認しておく ver1.6以降→要確認
-            Log.Message($"Thread ID: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
+            //Log.Message($"Thread ID: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
 
             is_value_fetched = false;
             Dictionary<string, float> affection_impact_map = new Dictionary<string, float>();
