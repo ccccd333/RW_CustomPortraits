@@ -1,62 +1,23 @@
-以下みたいなのの計算量
-①mood=rimworldの心情値の種類が1ポーンにつき、大体最大20とする(×3みたいなのは1としてカウントする)
+①moodAndInteractionImpact=rimworldの心情名とポーン同士がインタラクト(社交)の種類が1ポーンにつき、
+	大体最大20とする(×3みたいなのは1としてカウントする)、インタラクトで偏ったら1ポーンで10くらい
 ②group_filter=心情値を正規表現で一致したものをValueにあるものでまとめる
 ③merged_keys=①のkeyと②のvalueの正規表現で一致したものが入る
 ④priority_weights=これはKeyの上から順番に優先順位があるやつ、他との相関は⑤で説明
 ⑤matched_priority_weights=③のKeyと④のKeyの正規表現と一致したものを入れていく
 ⑥TexTureコンテナ=⑤のランダムな1つのキーとTexTureコンテナのキーの正規表現と一致するものを後続に渡す。
 
-最悪の場合の計算量
-大体の数値
-②group_filterのキーと値の組み合わせが60個ある(値の要素数>キーの要素数)
-④priority_weightsのキーが120個ある
-⑥TexTureコンテナのキーが120個ある
-
-group_filter × mood	60 × 20 = 1200
-priority_weights × merged_keys	120 × 13 = 1560
-texture_container × matched_priority_weights(ランダム抽出後)	120 × 1 = 120
-合計	3000回以下
-
-フレームレート：
-60fps	約16.6ms
-
-1回の Regex.IsMatch()	数μs〜数百μs
-
-1回50μs（0.05ms）とすると
-
-3000回 → 約150ms
-1000回 → 約50ms
-500回 → 約25ms
-
-200回以下の正規表現でのパターンマッチングならほぼ問題ない認識
-（ただし、正規表現の部分は事前にキャッシュは作っているものとする）
-
-1フレーム内で上記を処理した後に、json内のframe_intervalの秒数間は処理を行わない。
 
 <結論>
 上記から正規表現をjsonに定義する際は
-group_filterでできるだけmoodを網羅して、priority_weights、mood_refsで正規表現を使わずgroupの直値の内容で書くとすればパフォーマンス的によくなる。
+group_filterでできるだけmoodを網羅して、priority_weights、refsで正規表現を使わずgroupの直値の内容で書くとすればパフォーマンス的によくなる。
     "group": {
       "vanilla": [
         "新天地",
         "希望が.*意気込み"
       ],
       "..." : [...]
-      ＝＝＞ここのキーではなく値側の定義数が正規表現を含め60個想定
-      人によってはこの心情値も判定したいってあるかもなので、何とも言えない。
     },
     "priority_weights": {"vanilla": {...}}
-
-たとえ、1フレーム目が重くても
---------------------以下みたい--------------------
-フレーム番号	処理内容	所要時間（例）	FPS換算
-1	正規表現＋辞書構築	20ms	50fps(ここが私の懸念点)
-2	テクスチャ参照のみ	2ms	500fps(以降はさっきの重い処理はキャッシュで返却)
-
-※ 実際はUnityやRimWorld側のフレーム制御で、一定以上にはならない
-----------------------------------------------------------
-1フレームで完了しなくても処理は完了するので問題なし。
-
 
 ---------------サンプル------------------
 group_filter ==> Key 新天地 Value vanilla
@@ -72,9 +33,10 @@ mood ==> Key 陽気な性格 Value 12
 mood ==> Key 多様な考え Value 6
 mood ==> Key 星的な環境 Value 0
 mood ==> Key 心地よい Value 4
+interaction ==> Key 世間話 Value 1
 
-
-merged_keys 
+Output ==> moodAndInteractionImpact ==>
+==> Key 希望が.*への意気込み Value vanilla
 ==> Key とても豪華な食堂 Value 5
 ==> Key よく眠れない Value -1
 ==> Key わずかに豪華な宿舎 Value -2
@@ -86,18 +48,42 @@ merged_keys
 ==> Key 多様な考え Value 6
 ==> Key 星的な環境 Value 0
 ==> Key 心地よい Value 4
-==> Key vanilla  Value null
+
+Merged_key ==>
+==> Key vanilla Value 希望が.*への意気込み --> ここでgroupのキーと値を反転
+==> Key とても豪華な食堂 Value 5 --> moodAndInteractionImpactのものを残す理由は、
+									人によっては必要なのが1つだから、priority_weightで正規表現で判定したりする人がいるかと思い残しております。
+==> Key よく眠れない Value -1
+==> Key わずかに豪華な宿舎 Value -2
+==> Key ずぶ濡れ Value -3
+==> Key 希望が低い将来への意気込み Value 18
+==> Key お腹が空いた Value -6
+==> Key 広々室内 Value 5
+==> Key 陽気な性格 Value 12
+==> Key 多様な考え Value 6
+==> Key 星的な環境 Value 0
+==> Key 心地よい Value 4
+
+----------------
+Input ==> moodAndInteractionImpact
 
 priority_weights
 ==>key 新天地  value 20
 ==>key 希望が.*意気込み  value 10
 ==>key vanilla value 20 
 
-matched_priority_weights
+Output ==> matched_priority_weights
 ==>Key 希望が低い将来への意気込み Value 10
 ==>Key vanilla Value 20
+----------------
+
+※matched_priority_weightsのValueの内容で、ランダムに一つピックアップする。
+
+Input ==> vanilla
 
 TexTureコンテナ 
 ==> Key 新天地 Value Texture2D
 ==> Key 希望が.*への意気込み Value Texture2D
 ==> Key vanilla Value Texture2D
+
+Output ==> vanillaのRefsの内容で、画像アニメーションor画像表示をする。
