@@ -229,3 +229,17 @@ stagesの箇所が心情名です。ただ[0]~となっているので、後述�
     }
   }
 }
+
+4.Setting.jsonについて
+{
+
+  "display_duration": 2.0,←ref keyに表示時間を定義していない場合こちらが使われます。
+  "recipient_log_retention": {←受け手側のインタラクトをため込む量とデフォルト定義
+    "max_entries": 20,←スタックする量の最大
+    "seconds": 12.0←スタックしておく時間のデフォルト時間
+  },
+  "initiator_log_retention": {
+    "max_entries": 20,
+    "seconds": 12.0
+  }
+}
