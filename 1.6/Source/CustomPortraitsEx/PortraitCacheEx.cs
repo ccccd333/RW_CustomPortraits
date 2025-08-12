@@ -54,8 +54,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             catch (Exception)
             {
                 Log.Error($"[PortraitsEx] The Setting.json file could not be loaded. : {Directory.FullName + "/Setting.json"}");
-                // json読み込みで失敗したら適当に2秒
-                Settings.display_duration = 2.0f;
             }
 
             if (Refs.Count > 0)
@@ -237,8 +235,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 InteractionSelectionMap.InteractionFilter.Add(intf_key, intf);
                 if (Utility.IsRegexPattern(intf_key))
                 {
+                    Log.Message($"[PortraitsEx] InteractionFilter ==> Target preset: {preset_name} ADDREGEX");
                     InteractionSelectionMap.intf_regex_cache.Add(intf_key, new Regex(intf_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
                 }
+                Log.Message($"[PortraitsEx] InteractionFilter ==> Target preset: {preset_name} Key: {intf_key} matched_initiator_key: {intf.matched_initiator_key} matched_recipient_key: {intf.matched_recipient_key}");
             }
         }
         private static void Group(string preset_name, string k, JToken n, Refs r)
