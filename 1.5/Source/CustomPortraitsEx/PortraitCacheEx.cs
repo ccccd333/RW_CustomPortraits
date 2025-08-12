@@ -54,14 +54,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             catch (Exception)
             {
                 Log.Error($"[PortraitsEx] The Setting.json file could not be loaded. : {Directory.FullName + "/Setting.json"}");
-                // json読み込みで失敗したら適当に2秒
-                Settings.display_duration = 2.0f;
-                Settings.initiator_log_retention = new LogRetention();
-                Settings.recipient_log_retention = new LogRetention();
-                Settings.initiator_log_retention.seconds = 12.0f;
-                Settings.initiator_log_retention.max_entries = 20;
-                Settings.recipient_log_retention.seconds = 12.0f;
-                Settings.recipient_log_retention.max_entries = 20;
             }
 
             if (Refs.Count > 0)

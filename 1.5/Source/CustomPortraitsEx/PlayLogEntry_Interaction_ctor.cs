@@ -38,7 +38,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         public static bool Prefix(InteractionDef intDef, Pawn initiator, Pawn recipient, List<RulePackDef> extraSentencePacks)
         {
-            // PlayLog.Add()の引数に使われるPlayLogEntry_Interactionのctorフック
+            // PlayLog.Add()の引数に使われるPlayLogEntry_Interactionのctor
             try
             {
                 // 別スレッドかどうか確認しておく ver1.6以降→要確認
