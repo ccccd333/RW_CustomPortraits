@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Comp_PawnCustomPortrait.cs" />
+    <Compile Include="DDS.cs" />
     <Compile Include="Dialog_PortraitPawn.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="GameComponent_CustomPortraits.cs" />

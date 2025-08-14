@@ -11,7 +11,7 @@ Portraits can be set in "Health" tab of a pawn.
 Images are loaded from "CustomPortraits" folder in RimWorld root directory.  
 Something like: .../steamapps/common/RimWorld/CustomPortraits  
 You can use a button in mod settings to find it quickly.  
-.jpg, .jpeg, .png images are supported.  
+.jpg, .jpeg, .png and .dds (DXT1, DXT5) images are supported.  
 Nested directories are supported.  
 No need to restart for every file.  
 Textures loaded on demand every time you open portrait dropdown.
@@ -19,7 +19,7 @@ Textures loaded on demand every time you open portrait dropdown.
 # ![Features](https://i.postimg.cc/zBzB6kTG/h-Features.png)
 
 - Images of any size.
-- Transparency.
+- Transparency. (where format allows)
 - Multiple portraits for each pawn.
 - A lot of customization options and increasing.
 - Available for animals on def-basis. (only 1.4 and 1.5 versions)
@@ -101,6 +101,10 @@ _Normalize presentation of alternatives!_
 - [Avatar](https://steamcommunity.com/sharedfiles/filedetails/?id=3111373293)
 
 # ![Changelog](https://i.postimg.cc/k4T4mtyF/h-Changelog.png)
+
+#### 15.08.25
+
+- DDS (DXT1, DXT5) support added to 1.6 and 1.5.
 
 #### 12.06.25
 
