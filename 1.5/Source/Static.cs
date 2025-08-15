@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using Foxy.CustomPortraits.CustomPortraitsEx;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -16,8 +17,10 @@ namespace Foxy.CustomPortraits {
 		public static readonly Texture2D texBlank = ContentFinder<Texture2D>.Get("UI/CustomPortraits/blank");
 
 		static Static() {
-			PortraitCache.Update();
-			Harmony h = new Harmony("Foxy.CustomPortraits");
+            PortraitCache.Update();
+            PortraitCacheEx.Update();
+
+            Harmony h = new Harmony("Foxy.CustomPortraits");
 			h.PatchAll();
 			ModCompatibility.PatchAll(h);
 		}
