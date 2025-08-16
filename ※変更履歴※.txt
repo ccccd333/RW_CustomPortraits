@@ -1,0 +1,12 @@
+ver 1.1 test
+	Cine2DDSToolでvflip（上下逆転）処理を削除しました。
+	その代わり、ゲーム内でDDSブロックを反転し上下逆転処理を追加しました。
+	そのためすでにver1.0で上下逆転してしまった人は、convert_dds_dtx1_2_dds_vflip.pyを使って
+	dds画像を再度上下逆転してください。
+	
+	Really Custom Portraitsの最新版を取り込みました。
+	https://steamcommunity.com/sharedfiles/filedetails/?id=2956572955&tscn=1755200430
+	
+	本体を更新してからこのmodで上書きしてください。
+ver1.0 test
+	初版

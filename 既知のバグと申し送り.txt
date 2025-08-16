@@ -1,0 +1,10 @@
+UnityがOpenGLかDirectXかの座標系の違いか忘れましたが、
+Texture2D.LoadRawTextureDataでDDSの読み込み時に上下反転します。
+これは元画像次第で発生します。
+
+なのでCine2DDSToolではpng→dds出力時にvflipしてます
+(ImageMagick)
+
+もし直った報告があれば対応したいと思います。
+
+※ver1.1 testでゲーム内で上下反転を行えるようになったので必要ないです※

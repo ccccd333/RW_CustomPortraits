@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Foxy.CustomPortraits.CustomPortraitsEx;
+using System.Collections.Generic;
 using Verse;
 
 namespace Foxy.CustomPortraits {
@@ -11,7 +12,19 @@ namespace Foxy.CustomPortraits {
 			Instance = this;
 		}
 
-		public override void ExposeData() {
+        public override void StartedNewGame()
+        {
+            ConditionDrivenPortrait.Reset();
+            Log.Message("[PortraitsEx] StartedNewGame.");
+        }
+
+        public override void LoadedGame()
+        {
+            ConditionDrivenPortrait.Reset();
+            Log.Message("[PortraitsEx] LoadedGame.");
+        }
+
+        public override void ExposeData() {
 			base.ExposeData();
 			Scribe_Collections.Look(ref animals, "animals", valueLookMode: LookMode.Deep);
 		}
