@@ -37,18 +37,19 @@ namespace Foxy.CustomPortraits {
 				if (Has(path)) continue;
 				if (Settings.Instance.debug) Log.Message($"[Portraits] New portrait: {path}");
 				byte[] data = File.ReadAllBytes(file.FullName);
-				Texture2D tex;
+				Texture2D tex = new Texture2D(2, 2);
 				try {
 					if (file.Extension.ToLower() == ".dds") {
-						tex = LoadTextureDDS(data);
+						tex.LoadImageDDS(data);
 					} else {
-						tex = LoadTexture(data);
+						tex.LoadImage(data);
 					}
 					tex.name = path;
 					cache.Add(path, tex);
 				} catch (Exception ex) {
 					Log.Error($"[Portraits] Portrait failed to load: {path}");
 					Log.Error($"[Portraits] {ex.Message}");
+					UnityEngine.Object.Destroy(tex);
 					cache.Add(path, null);
 				}
 			}
@@ -64,16 +65,6 @@ namespace Foxy.CustomPortraits {
 		}
 		public static string GetRelativePath(FileInfo fi) {
 			return fi.FullName.Substring(Directory.FullName.Length + 1);
-		}
-		private static Texture2D LoadTexture(byte[] data) {
-			Texture2D tex = new Texture2D(2, 2);
-			tex.LoadImage(data);
-			return tex;
-		}
-		private static Texture2D LoadTextureDDS(byte[] data) {
-			Texture2D tex = new Texture2D(2, 2);
-			tex.LoadImageDDS(data);
-			return tex;
 		}
 	}
 }
