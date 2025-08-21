@@ -234,6 +234,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
 
                 }
+                intf.interaction_name = intf_key;
                 InteractionSelectionMap.InteractionFilter.Add(intf_key, intf);
                 if (Utility.IsRegexPattern(intf_key))
                 {
@@ -363,6 +364,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     foreach (var v in (JArray)prop.Value)
                     {
                         string portrait_path = v.ToString();
+                        tx.file_path = portrait_path;
 
                         if (portrait_path.Contains("~"))
                         {
@@ -398,6 +400,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 range_from = escp;
                             }
 
+                            tx.d = d.ToLower();
+                            tx.file_base_path = base_path;
+                            tx.file_path_first = range_from.ToString();
+                            tx.file_path_second = range_to.ToString();
+
                             for (; range_from <= range_to; range_from++)
                             {
                                 string f = Directory.FullName + "/" + base_path + range_from.ToString() + d;
@@ -405,14 +412,18 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 //Log.Message($"[PortraitsEx] Load Protraits: {f}");
                                 byte[] data = File.ReadAllBytes(f);
                                 Texture2D tex = LoadTextureDDS(data);
+
                                 tx.txs.Add(tex);
+                                
                             }
                         }
                         else
                         {
                             string d = "";
                             Utility.Delimiter(portrait_path, out d);
-
+                            tx.d = d.ToLower();
+                            tx.file_base_path = portrait_path.Substring(0, portrait_path.LastIndexOf('/') + 1);
+                            tx.file_path_first = portrait_path.Substring(tx.file_base_path.Length);
                             if (d.ToLower() == ".dds")
                             {
                                 string f = Directory.FullName + "/" + v;
