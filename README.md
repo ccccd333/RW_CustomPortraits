@@ -102,6 +102,10 @@ _Normalize presentation of alternatives!_
 
 # ![Changelog](https://i.postimg.cc/k4T4mtyF/h-Changelog.png)
 
+#### 02.09.25
+
+- HAR support. (Tested on [Aya] Silkiera Race)
+
 #### 15.08.25
 
 - DDS (DXT1, DXT5) support added to 1.6 and 1.5.
@@ -109,7 +113,7 @@ _Normalize presentation of alternatives!_
 ### 06.08.25
 
 - Tested on 1.6.4535.
-- Enabled compatibility for CM Color Coded Mood Bar and[LTO] Colony Groups.
+- Enabled compatibility for CM Color Coded Mood Bar and [LTO] Colony Groups.
 - Verified compatibility with Pawn Badge Fan Fork, Job In Bar, [NL] Dynamic Portraits, [NL] Custom Portraits.
 - Added mod setting to remove console spam. (Default: disabled)
 
