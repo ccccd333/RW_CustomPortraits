@@ -37,7 +37,7 @@ namespace Foxy.CustomPortraits {
 				if (Has(path)) continue;
 				if (Settings.Instance.debug) Log.Message($"[Portraits] New portrait: {path}");
 				byte[] data = File.ReadAllBytes(file.FullName);
-				Texture2D tex = new Texture2D(2, 2);
+				Texture2D tex = new Texture2D(2, 2) { name = path };
 				try {
 					if (file.Extension.ToLower() == ".dds") {
 						tex.LoadImageDDS(data);
