@@ -15,7 +15,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
     public class GroupEditor : TabBase
     {
         int stage = 0;
-        string call_id = "";
         private string edit_target_group_name = "";
         Refs refs;
         private Dictionary<string, List<string>> temp_group_filter = new Dictionary<string, List<string>>();
@@ -72,6 +71,18 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             }
 
             End(listing);
+        }
+
+        public void Reset()
+        {
+            stage = 0;
+            call_id = "";
+            edit_target_group_name = "";
+            result_edit_target_group_name = "";
+            refs = null;
+            temp_group_filter.Clear();
+            temp_target_group_rows.Clear();
+            temp_remove_group_rows.Clear();
         }
 
         private void CreateOrEditGroup(Listing_Standard listing, string selected_preset_name)
@@ -308,16 +319,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             }
         }
 
-        private void Reset()
-        {
-            stage = 0;
-            call_id = "";
-            edit_target_group_name = "";
-            result_edit_target_group_name = "";
-            refs = null;
-            temp_group_filter.Clear();
-            temp_target_group_rows.Clear();
-            temp_remove_group_rows.Clear();
-        }
+
     }
 }

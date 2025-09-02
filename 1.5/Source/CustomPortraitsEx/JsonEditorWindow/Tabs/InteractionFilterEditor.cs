@@ -13,7 +13,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
     public class InteractionFilterEditor : TabBase
     {
         int stage = 0;
-        string call_id = "";
         InteractionSelectionMap ism;
 
         private string edit_target_intf = "";
@@ -78,6 +77,24 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             }
 
             End(listing);
+        }
+
+        public void Reset()
+        {
+            stage = 0;
+            call_id = "";
+            edit_target_intf = "";
+            edit_target_intf_initiator = "";
+            edit_target_intf_recipient = "";
+            filter_text = "";
+            cache_duration_seconds_input_buffer = "12";
+            temp_reverse_interaction_filter.Clear();
+            //temp_interaction_filter_row.Clear();
+            temp_remove_interaction_filter_rows.Clear();
+            temp_selected_Interactions.Clear();
+            temp_edited_Interactions.Clear();
+            temp_interaction_filter = new InteractionFilter();
+            result_interaction_filter.Clear();
         }
 
         private void CreateOrEditInteractionFilter(Listing_Standard listing)
@@ -458,24 +475,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                     stage = 2;
                 }
             }
-        }
-
-        private void Reset()
-        {
-            stage = 0;
-            call_id = "";
-            edit_target_intf = "";
-            edit_target_intf_initiator = "";
-            edit_target_intf_recipient = "";
-            filter_text = "";
-            cache_duration_seconds_input_buffer = "12";
-            temp_reverse_interaction_filter.Clear();
-            //temp_interaction_filter_row.Clear();
-            temp_remove_interaction_filter_rows.Clear();
-            temp_selected_Interactions.Clear();
-            temp_edited_Interactions.Clear();
-            temp_interaction_filter = new InteractionFilter();
-            result_interaction_filter.Clear();
         }
     }
 }

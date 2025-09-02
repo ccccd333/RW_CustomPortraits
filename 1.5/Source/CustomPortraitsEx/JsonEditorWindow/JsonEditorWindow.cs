@@ -29,6 +29,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
         private InteractionFilterEditor InteractionFilterEditor = new InteractionFilterEditor();
         private GroupEditor GroupEditor = new GroupEditor();
         private PortraitGroupEditor PortraitGroupEditor = new PortraitGroupEditor();
+        private PriorityWeightEditor PriorityWeightEditor = new PriorityWeightEditor();
         private List<TabRecord> Tabs = new List<TabRecord>();
 
         public JsonEditorWindow(ModContentPack content) : base(content) { }
@@ -79,7 +80,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
             }
             TabDrawer.DrawTabs(tabsRect, Tabs);
 
-            
+
             //Rect viewRect = new Rect(0, 0, inRect.width - 17f, scrollHeight);
             //Widgets.BeginScrollView(inRect, ref scroll, viewRect);
             //Listing_Standard listing = new Listing_Standard(inRect.AtZero(), () => scroll)
@@ -97,53 +98,54 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
             }
             else
             {
-                //listing.Label("RCPSelectPreset".Translate());
-
-                //List<string> presets = new List<string>(PortraitCacheEx.Refs.Keys);
-                //listing.Label("Select an item from the list:");
-
-                //// リスト表示
-                //foreach (var item in presets)
-                //{
-                //    if (listing.ButtonText(item))
-                //    {
-                //        // クリックされたら TextField にコピー
-                //        input_text = item;
-                //    }
-                //}
-
-                //listing.GapLine();
-
-
-                //listing.Label("Edit selected JSON:");
-                //listing.Label(input_text);
-
-                switch (tab_int)
+                if (DashboardTab.call_id == DashboardTab.WRITE_JSON_ALL ||
+                    DashboardTab.call_id == DashboardTab.WRITE_NEW_JSON_ALL ||
+                    DashboardTab.call_id == DashboardTab.WRITE_JSON_PW)
                 {
-                    case 0:
-                        Tabs[0].selected = true;
-                        DashboardTab.DrawEditorContent(inRect, ThoughtBrowser.selected_thoughts, InteractionBrowser.selected_Interactions);
-                        break;
-                    case 1:
-                        Tabs[1].selected = true;
-                        ThoughtBrowser.Draw(inRect);
-                        break;
-                    case 2:
-                        Tabs[2].selected = true;
-                        InteractionBrowser.Draw(inRect);
-                        break;
-                    case 3:
-                        Tabs[3].selected = true;
-                        InteractionFilterEditor.Draw(inRect, InteractionBrowser.selected_Interactions);
-                        break;
-                    case 4:
-                        Tabs[4].selected = true;
-                        GroupEditor.Draw(inRect, ThoughtBrowser.selected_thoughts, InteractionBrowser.selected_Interactions, InteractionFilterEditor.result_interaction_filter, DashboardTab.selected_preset_name);
-                        break;
-                    case 5:
-                        Tabs[5].selected = true;
-                        PortraitGroupEditor.Draw(inRect, GroupEditor.result_edit_target_group_name, DashboardTab.selected_preset_name);
-                        break;
+
+                }
+                else
+                {
+
+                    switch (tab_int)
+                    {
+                        case 0:
+                            Tabs[0].selected = true;
+
+                            bool ife_e = InteractionFilterEditor.call_id == "edit->end editing";
+                            bool ge_e = GroupEditor.call_id == "edit->end editing";
+                            bool pge_e = PortraitGroupEditor.call_id == "edit end";
+                            bool pw_e = PriorityWeightEditor.call_id == "order end->weight end";
+
+                            Dictionary<string, bool> end_flags = new Dictionary<string, bool> {
+                            { "インタラクトの振分", ife_e }, {"グループ化",ge_e }, {"ポートレートの選択",pge_e }, {"優先順位の設定",pw_e } };
+                            DashboardTab.Draw(inRect, end_flags);
+                            break;
+                        case 1:
+                            Tabs[1].selected = true;
+                            ThoughtBrowser.Draw(inRect);
+                            break;
+                        case 2:
+                            Tabs[2].selected = true;
+                            InteractionBrowser.Draw(inRect);
+                            break;
+                        case 3:
+                            Tabs[3].selected = true;
+                            InteractionFilterEditor.Draw(inRect, InteractionBrowser.selected_Interactions);
+                            break;
+                        case 4:
+                            Tabs[4].selected = true;
+                            GroupEditor.Draw(inRect, ThoughtBrowser.selected_thoughts, InteractionBrowser.selected_Interactions, InteractionFilterEditor.result_interaction_filter, DashboardTab.selected_preset_name);
+                            break;
+                        case 5:
+                            Tabs[5].selected = true;
+                            PortraitGroupEditor.Draw(inRect, GroupEditor.result_edit_target_group_name, DashboardTab.selected_preset_name);
+                            break;
+                        case 6:
+                            Tabs[6].selected = true;
+                            PriorityWeightEditor.Draw(inRect, GroupEditor.result_edit_target_group_name, DashboardTab.selected_preset_name);
+                            break;
+                    }
                 }
             }
 

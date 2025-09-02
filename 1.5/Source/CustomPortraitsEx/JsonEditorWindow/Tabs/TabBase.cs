@@ -12,7 +12,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
     {
         private float scroll_height = 0;
         private Vector2 scroll;
-
+        public string call_id = "";
         public Listing_Standard Begin(Rect inRect)
         {
             Rect base_rect = inRect.BottomPart(0.95f);
