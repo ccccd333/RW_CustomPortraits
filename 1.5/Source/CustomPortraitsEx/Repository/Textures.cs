@@ -67,6 +67,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
         public string file_base_path = "";
         public string file_path_first = "";
         public string file_path_second = "";
-        public string d = "";
+        public string d = ".dds";
     }
 }

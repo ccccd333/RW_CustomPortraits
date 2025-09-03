@@ -88,6 +88,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             End(listing);
         }
 
+        public void Reset()
+        {
+            selected_Interactions.Clear();
+        }
+
         private void InitializeInteractions()
         {
             try
@@ -105,7 +110,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                     }
 
                 }
-
+                all_Interaction = all_Interaction.Distinct().ToList();
                 all_Interaction.Sort();
             }
             catch (Exception)

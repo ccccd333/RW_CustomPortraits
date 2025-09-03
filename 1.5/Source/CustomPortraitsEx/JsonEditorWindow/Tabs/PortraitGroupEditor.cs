@@ -23,13 +23,18 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         string temp_st_display_duration = "6.0";
         string temp_st_idle_display_duration = "6.0";
         string temp_st_dead_display_duration = "6.0";
+        List<string> error_list = new List<string>();
 
         TextureMeta temp_texture_idle_meta = new TextureMeta();
         TextureMeta temp_texture_dead_meta = new TextureMeta();
 
-        TextureMeta result_texture_meta = new TextureMeta();
-        TextureMeta result_texture_idle_meta = new TextureMeta();
-        TextureMeta result_texture_dead_meta = new TextureMeta();
+        // グループ名はGroupEditor側のresult_edit_target_group_name
+        // 今回のグループ名に対するテクスチャ群
+        public TextureMeta result_texture_meta = new TextureMeta();
+        // アイドル用のテクスチャ群
+        public TextureMeta result_texture_idle_meta = new TextureMeta();
+        // 死亡用のテクスチャ群
+        public TextureMeta result_texture_dead_meta = new TextureMeta();
 
         public void Draw(Rect inRect, string edit_target_group_name, string selected_preset_name)
         {
@@ -90,6 +95,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             temp_st_display_duration = "6.0";
             temp_st_idle_display_duration = "6.0";
             temp_st_dead_display_duration = "6.0";
+
+            error_list.Clear();
         }
 
         private void EditPortraitGroup(Listing_Standard listing, string edit_target_group_name, string selected_preset_name)
@@ -105,23 +112,26 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
             listing.GapLine();
 
-            refs = PortraitCacheEx.Refs[selected_preset_name];
-            if (refs.txs.ContainsKey(edit_target_group_name))
+            if (PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
             {
-                
-                listing.Label($"既に紐づいているグループが存在するため初期値はこちらを使用します：{edit_target_group_name}");
-                if (!edited_cache_flag)
+                refs = PortraitCacheEx.Refs[selected_preset_name];
+                if (refs.txs.ContainsKey(edit_target_group_name))
                 {
-                    var tx = refs.txs[edit_target_group_name];
-                    temp_texture_meta = new TextureMeta(tx);
-                    //tx.file_path_first;
-                    temp_st_display_duration = temp_texture_meta.display_duration.ToString();
-                    //Log.Message($"{temp_texture_meta.d} {temp_texture_meta.file_base_path} {temp_texture_meta.file_path_first} {temp_texture_meta.file_path_second} {temp_texture_meta.IsAnimation}");
+
+                    listing.Label($"既に紐づいているグループが存在するため初期値はこちらを使用します：{edit_target_group_name}");
+                    if (!edited_cache_flag)
+                    {
+                        var tx = refs.txs[edit_target_group_name];
+                        temp_texture_meta = new TextureMeta(tx);
+                        //tx.file_path_first;
+                        temp_st_display_duration = temp_texture_meta.display_duration.ToString();
+                        //Log.Message($"{temp_texture_meta.d} {temp_texture_meta.file_base_path} {temp_texture_meta.file_path_first} {temp_texture_meta.file_path_second} {temp_texture_meta.IsAnimation}");
+                    }
+
+                    edited_cache_flag = true;
+
+                    listing.GapLine();
                 }
-
-                edited_cache_flag = true;
-
-                listing.GapLine();
             }
 
             PortraitEditTemplate(listing, temp_texture_meta, ref result_texture_meta, selected_preset_name, edit_target_group_name, ref temp_st_display_duration, "edit portrait group");
@@ -143,23 +153,25 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             }
 
             listing.GapLine();
-
-            if (refs.txs.ContainsKey("Idle"))
+            if (PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
             {
-
-                listing.Label($"既にIdleが存在するため初期値はこちらを使用します：Idle");
-                if (!edited_idle_cache_flag)
+                if (refs.txs.ContainsKey("Idle"))
                 {
-                    var tx = refs.txs["Idle"];
-                    temp_texture_idle_meta = new TextureMeta(tx);
-                    //tx.file_path_first;
-                    temp_st_idle_display_duration = temp_texture_idle_meta.display_duration.ToString();
-                    //Log.Message($"{temp_texture_meta.d} {temp_texture_meta.file_base_path} {temp_texture_meta.file_path_first} {temp_texture_meta.file_path_second} {temp_texture_meta.IsAnimation}");
+
+                    listing.Label($"既にIdleが存在するため初期値はこちらを使用します：Idle");
+                    if (!edited_idle_cache_flag)
+                    {
+                        var tx = refs.txs["Idle"];
+                        temp_texture_idle_meta = new TextureMeta(tx);
+                        //tx.file_path_first;
+                        temp_st_idle_display_duration = temp_texture_idle_meta.display_duration.ToString();
+                        //Log.Message($"{temp_texture_meta.d} {temp_texture_meta.file_base_path} {temp_texture_meta.file_path_first} {temp_texture_meta.file_path_second} {temp_texture_meta.IsAnimation}");
+                    }
+
+                    edited_idle_cache_flag = true;
+
+                    listing.GapLine();
                 }
-
-                edited_idle_cache_flag = true;
-
-                listing.GapLine();
             }
 
             PortraitEditTemplate(listing, temp_texture_idle_meta, ref result_texture_idle_meta, selected_preset_name, "Idle", ref temp_st_idle_display_duration, "edit portrait group->edit idle portrait");
@@ -179,23 +191,25 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             }
 
             listing.GapLine();
-
-            if (refs.txs.ContainsKey("Dead"))
+            if (PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
             {
-
-                listing.Label($"既にDeadが存在するため初期値はこちらを使用します：Dead");
-                if (!edited_dead_cache_flag)
+                if (refs.txs.ContainsKey("Dead"))
                 {
-                    var tx = refs.txs["Dead"];
-                    temp_texture_dead_meta = new TextureMeta(tx);
-                    //tx.file_path_first;
-                    temp_st_dead_display_duration = temp_texture_dead_meta.display_duration.ToString();
-                    //Log.Message($"{temp_texture_meta.d} {temp_texture_meta.file_base_path} {temp_texture_meta.file_path_first} {temp_texture_meta.file_path_second} {temp_texture_meta.IsAnimation}");
+
+                    listing.Label($"既にDeadが存在するため初期値はこちらを使用します：Dead");
+                    if (!edited_dead_cache_flag)
+                    {
+                        var tx = refs.txs["Dead"];
+                        temp_texture_dead_meta = new TextureMeta(tx);
+                        //tx.file_path_first;
+                        temp_st_dead_display_duration = temp_texture_dead_meta.display_duration.ToString();
+                        //Log.Message($"{temp_texture_meta.d} {temp_texture_meta.file_base_path} {temp_texture_meta.file_path_first} {temp_texture_meta.file_path_second} {temp_texture_meta.IsAnimation}");
+                    }
+
+                    edited_dead_cache_flag = true;
+
+                    listing.GapLine();
                 }
-
-                edited_dead_cache_flag = true;
-
-                listing.GapLine();
             }
 
             PortraitEditTemplate(listing, temp_texture_dead_meta, ref result_texture_dead_meta, selected_preset_name, "Dead", ref temp_st_dead_display_duration, "edit end");
@@ -276,7 +290,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 Rect input_to_rect = listing.GetRect(30f);
                 int to_tex = 2;
                 if (!int.TryParse(meta.file_path_second, out to_tex)) { to_tex = 2; }
-                
+
                 Widgets.TextFieldNumeric<int>(input_to_rect, ref to_tex, ref meta.file_path_second);
                 meta.file_path_second = to_tex.ToString();
 
@@ -329,37 +343,84 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
                 meta.file_path = meta.file_base_path + meta.file_path_first + meta.d;
             }
+            listing.GapLine();
+
+            if (error_list.Count > 0)
+            {
+                foreach (var error in error_list)
+                {
+                    listing.Label(error);
+                }
+            }
 
             Rect enter_rect = listing.GetRect(30f);
             if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
             {
                 bool check = true;
-
+                error_list.Clear();
                 if (meta.IsAnimation)
                 {
-                    if (meta.d != ".dds") check = false;
+                    if (meta.d != ".dds")
+                    {
+                        error_list.Add("[ERROR] animationなのにDDSじゃない[これ見かけたら報告ください]");
+                        check = false;
+                    }
 
-                    if (meta.file_base_path == "") check = false;
+                    if (meta.file_base_path == "")
+                    {
+                        error_list.Add("[ERROR] file_base_pathがない[これ見かけたら報告ください]");
+                        check = false;
+                    }
 
-                    if (meta.file_path_first != "1") check = false;
+                    if (meta.file_path_first != "1")
+                    {
+                        error_list.Add("[ERROR] file_path_firstが1以外になってる[これ見かけたら報告ください]");
+                        check = false;
+
+                    }
                     int outint = -1;
                     if (int.TryParse(meta.file_path_second, out outint))
                     {
-                        if (outint < 1) check = false;
+                        if (outint < 1)
+                        {
+                            error_list.Add("[ERROR] from-toのto部分がfrom部分より小さい値になってます");
+                            check = false;
+                        }
                     }
 
-                    if (meta.display_duration < 0.01f) check = false;
+                    if (meta.display_duration < 0.01f)
+                    {
+                        error_list.Add("[ERROR] 切り替わり時間は1秒以上に設定してください");
+                        check = false;
+                    }
                 }
                 else
                 {
 
-                    if (meta.d != ".dds" || meta.d != ".png") check = false;
+                    if (meta.d != ".dds" && meta.d != ".png")
+                    {
+                        error_list.Add("[ERROR] 拡張子がDDSとPNG以外[これ見かけたら報告ください]");
+                        check = false;
 
-                    if (meta.file_base_path == "") check = false;
+                    }
 
-                    if (meta.file_path_first != "1") check = false;
+                    if (meta.file_base_path == "")
+                    {
+                        error_list.Add("[ERROR] file_base_pathがない[これ見かけたら報告ください]");
+                        check = false;
+                    }
 
-                    if (meta.display_duration < 0.01f) check = false;
+                    if (meta.file_path_first != "1")
+                    {
+                        error_list.Add("[ERROR] file_path_firstが1以外になってる[これ見かけたら報告ください]");
+                        check = false;
+                    }
+
+                    if (meta.display_duration < 0.01f)
+                    {
+                        error_list.Add("[ERROR] 切り替わり時間は1秒以上に設定してください");
+                        check = false;
+                    }
                 }
 
                 if (check)
@@ -390,7 +451,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 {
                     stage = 2;
                 }
-                else if(call_id == "edit portrait group->back")
+                else if (call_id == "edit portrait group->back")
                 {
                     Reset();
                     stage = 0;

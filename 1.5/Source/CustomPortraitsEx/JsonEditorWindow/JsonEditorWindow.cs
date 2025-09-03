@@ -32,6 +32,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
         private PriorityWeightEditor PriorityWeightEditor = new PriorityWeightEditor();
         private List<TabRecord> Tabs = new List<TabRecord>();
 
+        private CustomPortraitJsonWriter CustomPortraitJsonWriter = new CustomPortraitJsonWriter();
+        private WriteJsonErrorWindow WriteJsonErrorWindow = new WriteJsonErrorWindow();
+
+        List<string> error_message1 = new List<string>();
+        List<string> error_message2 = new List<string>();
         public JsonEditorWindow(ModContentPack content) : base(content) { }
 
         public override string SettingsCategory()
@@ -92,17 +97,43 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
 
             //----------------------Begin
 
-            if (!PortraitCacheEx.IsAvailable)
+            //if (!PortraitCacheEx.IsAvailable)
+            //{
+            //    //listing.Label("RCPError".Translate());
+            //}
+            //else
             {
-                //listing.Label("RCPError".Translate());
-            }
-            else
-            {
-                if (DashboardTab.call_id == DashboardTab.WRITE_JSON_ALL ||
-                    DashboardTab.call_id == DashboardTab.WRITE_NEW_JSON_ALL ||
-                    DashboardTab.call_id == DashboardTab.WRITE_JSON_PW)
+                if (DashboardTab.json_write_modes.Contains(DashboardTab.WRITE_JSON_ALL) ||
+                    DashboardTab.json_write_modes.Contains(DashboardTab.WRITE_NEW_JSON_ALL) ||
+                    DashboardTab.json_write_modes.Contains(DashboardTab.WRITE_JSON_PW) ||
+                    DashboardTab.json_write_modes.Contains(DashboardTab.WRITE_JSON_INTERACTIONS))
                 {
+                    if (WriteJsonErrorWindow.call_id == "")
+                    {
+                        CustomPortraitJsonWriter.Write(DashboardTab, InteractionFilterEditor, GroupEditor, PortraitGroupEditor, PriorityWeightEditor);
 
+                        error_message1 = PortraitCacheEx.ReadPresetJson(DashboardTab.selected_preset_name);
+                        if (DashboardTab.json_write_modes.Contains(DashboardTab.WRITE_JSON_INTERACTIONS))
+                        {
+                            error_message2 = PortraitCacheEx.ReadPresetJson("InteractionFilter");
+                        }
+
+                        WriteJsonErrorWindow.Draw(inRect, DashboardTab.selected_preset_name, error_message1, error_message2);
+                    }
+                    else if (WriteJsonErrorWindow.call_id == "end")
+                    {
+                        ResetAll();
+                    }
+                    else
+                    {
+                        WriteJsonErrorWindow.Draw(inRect, DashboardTab.selected_preset_name, error_message1, error_message2);
+                    }
+
+
+                }
+                else if (DashboardTab.change_preset)
+                {
+                    ResetExceptDashboardTab();
                 }
                 else
                 {
@@ -118,7 +149,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
                             bool pw_e = PriorityWeightEditor.call_id == "order end->weight end";
 
                             Dictionary<string, bool> end_flags = new Dictionary<string, bool> {
-                            { "インタラクトの振分", ife_e }, {"グループ化",ge_e }, {"ポートレートの選択",pge_e }, {"優先順位の設定",pw_e } };
+                            { "InteractionFilterEditor", ife_e }, {"GroupEditor",ge_e }, {"PortraitGroupEditor",pge_e }, {"PriorityWeightEditor",pw_e } };
                             DashboardTab.Draw(inRect, end_flags);
                             break;
                         case 1:
@@ -177,6 +208,29 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
                     Tabs[a].selected = false;
                 }
             }
+        }
+
+        private void ResetAll()
+        {
+            DashboardTab.Reset();
+            InteractionFilterEditor.Reset();
+            GroupEditor.Reset();
+            PortraitGroupEditor.Reset();
+            PriorityWeightEditor.Reset();
+            WriteJsonErrorWindow.Reset();
+            error_message1.Clear();
+            error_message2.Clear();
+        }
+
+        private void ResetExceptDashboardTab()
+        {
+            DashboardTab.change_preset = false;
+            InteractionFilterEditor.Reset();
+            GroupEditor.Reset();
+            PortraitGroupEditor.Reset();
+            PriorityWeightEditor.Reset();
+            error_message1.Clear();
+            error_message2.Clear();
         }
     }
 }

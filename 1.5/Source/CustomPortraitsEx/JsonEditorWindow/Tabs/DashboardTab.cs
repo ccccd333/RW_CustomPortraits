@@ -18,11 +18,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         public static string WRITE_JSON_ALL = "write json all";
         public static string WRITE_NEW_JSON_ALL = "write new json all";
         public static string WRITE_JSON_PW = "write json pw";
+        public static string WRITE_JSON_INTERACTIONS = "write json interactions";
 
         public string selected_preset_name = "";
         int stage = 0;
         string new_json_name = "";
         bool new_json_edit = false;
+
+        public List<string> json_write_modes = new List<string>();
+        public bool change_preset = false;
 
         public void Draw(Rect inRect, Dictionary<string, bool> end_flags)
         {
@@ -50,6 +54,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             selected_preset_name = "";
             new_json_name = "";
             new_json_edit = false;
+            json_write_modes.Clear();
+            change_preset = false;
         }
 
         private void DrawEditorContent(Listing_Standard listing, Dictionary<string, bool> end_flags)
@@ -84,6 +90,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (listing.ButtonText(item))
                 {
                     // クリックされたら TextField にコピー
+                    if(selected_preset_name != item)
+                    {
+                        change_preset = true;
+                    }
                     selected_preset_name = item;
                 }
             }
@@ -120,40 +130,53 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             {
                 bool marked_for = true;
                 bool marked_for_priority_weight = true;
+                bool marked_for_interaction_filter = true;
                 foreach (var item in end_flags)
                 {
-                    if(item.Key != "優先順位の設定" && item.Value)
+                    if(item.Key != "PriorityWeightEditor" && item.Value)
                     {
                         marked_for_priority_weight = false;
-                    }else if (item.Key == "優先順位の設定" && !item.Value)
+                    }
+                    else if (item.Key == "PriorityWeightEditor" && !item.Value)
                     {
                         marked_for_priority_weight = false;
                     }
 
+                    if(item.Key == "InteractionFilterEditor" && !item.Value)
+                    {
+                        marked_for_interaction_filter = false;
+                    }
+
                     if (!item.Value)
                     {
-                        marked_for = false;
+                        if (item.Key != "InteractionFilterEditor")
+                        {
+                            marked_for = false;
+                        }
                     }
                 }
 
                 if (marked_for)
                 {
-                    call_id = WRITE_JSON_ALL;
-
                     if (new_json_edit)
                     {
-                        call_id = WRITE_NEW_JSON_ALL;
+                        json_write_modes.Add(WRITE_NEW_JSON_ALL);
                     }
+                    else
+                    {
+                        json_write_modes.Add(WRITE_JSON_ALL);
+                    }
+                }
+
+                if (marked_for_interaction_filter)
+                {
+                    json_write_modes.Add(WRITE_JSON_INTERACTIONS);
                 }
 
                 if (!new_json_edit && marked_for_priority_weight)
                 {
-                    call_id = WRITE_JSON_PW;
-                }
-
-                marked_for = false;
-
-                
+                    json_write_modes.Add(WRITE_JSON_PW);
+                }                
             }
         }
 
@@ -193,6 +216,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (!string.IsNullOrEmpty(new_json_name))
                 {
                     call_id = "json new->end";
+                    if(new_json_name != selected_preset_name)
+                    {
+                        change_preset = true;
+                    }
                     selected_preset_name = new_json_name;
                     new_json_edit = true;
                 }

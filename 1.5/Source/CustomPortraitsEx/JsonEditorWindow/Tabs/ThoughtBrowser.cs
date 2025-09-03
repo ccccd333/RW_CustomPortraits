@@ -1,6 +1,7 @@
 ﻿using Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs;
 using RimWorld;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -91,6 +92,12 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
 
         }
 
+        public void Reset()
+        {
+            selected_thoughts.Clear();
+        }
+
+
         private void InitializeThoughts()
         {
             // Assembly-Csharp
@@ -105,7 +112,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
                     ThoughtStagesTexts(def, all_thoughts);
 
                 }
-
+                all_thoughts = all_thoughts.Distinct().ToList();
                 all_thoughts.Sort();
             }
             catch (Exception)
@@ -151,7 +158,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
 
                     if (!all_thoughts.Contains(text) && text != "")
                     {
-                        all_thoughts.Add(text);
+                        string regex_pattern = Regex.Replace(text, @"\s*\{.*?\}\s*", ".*");
+                        all_thoughts.Add(regex_pattern);
                     }
 
                     //text += " ";

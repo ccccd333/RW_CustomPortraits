@@ -16,9 +16,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         int stage = 0;
         Refs refs;
         Dictionary<string, string> buf_st = new Dictionary<string, string>();
-        public List<string> temp_priority_weight_order = new List<string>();
+        private List<string> temp_priority_weight_order = new List<string>();
         
         Dictionary<string, PriorityWeights> temp_priority_weights = new Dictionary<string, PriorityWeights>();
+
+        // 上からの優先順位(グループ名)を持っている
+        public List<string> result_priority_weight_order = new List<string>();
+        // グループ名に対する確率などディクショナリ
+        public Dictionary<string, PriorityWeights> result_priority_weights = new Dictionary<string, PriorityWeights>();
         public void Draw(Rect inRect, string edit_target_group_name, string selected_preset_name)
         {
             Listing_Standard listing = Begin(inRect);
@@ -31,52 +36,75 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             if(selected_preset_name == "")
             {
                 listing.Label("プリセットを選択してください");
-                listing.GapLine();
+             
             }
-
-            refs = PortraitCacheEx.Refs[selected_preset_name];
-
-            if (temp_priority_weight_order.Count == 0)
+            else if (!PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
             {
-                temp_priority_weight_order = refs.priority_weight_order.ToList();
-                temp_priority_weights = refs.priority_weights.ToDictionary(
-                    entry => entry.Key,
-                    entry => entry.Value.Clone()
-                    );
-
-                foreach (var key in temp_priority_weight_order)
+                if (temp_priority_weight_order.Count == 0)
                 {
-                    if (temp_priority_weights.TryGetValue(key, out var pw))
+                    stage = 1;
+                    temp_priority_weight_order.Add(edit_target_group_name);
+                    temp_priority_weights.Add(edit_target_group_name, new PriorityWeights());
+                    buf_st.Add(edit_target_group_name, "100");
+                }
+
+                switch (stage)
+                {
+                    case 1:
+                        DrawPriorityWeights(listing);
+                        break;
+                    case 2:
+                        EndEditing(listing);
+                        break;
+                        
+                }
+            }
+            else
+            {
+
+                refs = PortraitCacheEx.Refs[selected_preset_name];
+
+                if (temp_priority_weight_order.Count == 0)
+                {
+                    temp_priority_weight_order = refs.priority_weight_order.ToList();
+                    temp_priority_weights = refs.priority_weights.ToDictionary(
+                        entry => entry.Key,
+                        entry => entry.Value.Clone()
+                        );
+
+                    foreach (var key in temp_priority_weight_order)
                     {
-                        buf_st[key] = pw.weight.ToString();
+                        if (temp_priority_weights.TryGetValue(key, out var pw))
+                        {
+                            buf_st[key] = pw.weight.ToString();
+                        }
                     }
                 }
-            }
 
-            if (edit_target_group_name != "" && !temp_priority_weight_order.Contains(edit_target_group_name))
-            {
-                temp_priority_weight_order.Add(edit_target_group_name);
-                temp_priority_weights.Add(edit_target_group_name, new PriorityWeights());
-                buf_st.Add(edit_target_group_name, "100");
-                if (stage >= 1)
+                if (edit_target_group_name != "" && !temp_priority_weight_order.Contains(edit_target_group_name))
                 {
-                    stage = 0;
+                    temp_priority_weight_order.Add(edit_target_group_name);
+                    temp_priority_weights.Add(edit_target_group_name, new PriorityWeights());
+                    buf_st.Add(edit_target_group_name, "100");
+                    if (stage >= 1)
+                    {
+                        stage = 0;
+                    }
+                }
+
+                switch (stage)
+                {
+                    case 0:
+                        ShiftItem(listing);
+                        break;
+                    case 1:
+                        DrawPriorityWeights(listing);
+                        break;
+                    case 2:
+                        EndEditing(listing);
+                        break;
                 }
             }
-
-            switch (stage)
-            {
-                case 0:
-                    ShiftItem(listing);
-                    break;
-                case 1:
-                    DrawPriorityWeights(listing);
-                    break;
-                case 2:
-                    EndEditing(listing);
-                    break;
-            }
-
             SetStage();
 
             End(listing);
@@ -90,6 +118,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             buf_st.Clear();
             temp_priority_weight_order.Clear();
             temp_priority_weights.Clear();
+            result_priority_weight_order.Clear();
+            result_priority_weights.Clear();
         }
 
         private void ShiftItem(Listing_Standard listing)
@@ -186,6 +216,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
             {
                 call_id = "order end->weight end";
+
+                result_priority_weight_order = new List<string>(temp_priority_weight_order);
+                result_priority_weights = temp_priority_weights.ToDictionary(entry => entry.Key, entry => entry.Value.Clone());
             }
         }
 

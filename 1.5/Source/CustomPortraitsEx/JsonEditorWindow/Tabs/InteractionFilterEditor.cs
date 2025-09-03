@@ -35,7 +35,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
 
         public List<string> result_interaction_filter = new List<string>();
-
+        // インタラクションのキーになる箇所
+        public List<string> result_selected_interactions = new List<string>();
+        // インタラクションの値になる箇所
+        public InteractionFilter result_interaction_value = new InteractionFilter();
 
         public void Draw(Rect inRect, List<string> selected_Interactions)
         {
@@ -95,6 +98,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             temp_edited_Interactions.Clear();
             temp_interaction_filter = new InteractionFilter();
             result_interaction_filter.Clear();
+            result_selected_interactions.Clear();
+            result_interaction_value = new InteractionFilter();
         }
 
         private void CreateOrEditInteractionFilter(Listing_Standard listing)
@@ -341,6 +346,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (temp_selected_Interactions.Count > 0)
                 {
                     result_interaction_filter.Clear();
+                    result_selected_interactions.Clear();
                     if (temp_interaction_filter.matched_initiator_key != temp_interaction_filter.matched_recipient_key)
                     {
                         result_interaction_filter.Add(temp_interaction_filter.matched_initiator_key);
@@ -350,6 +356,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                     {
                         result_interaction_filter.Add(temp_interaction_filter.matched_initiator_key);
                     }
+
+                    // インタラクションのキーになる箇所
+                    result_selected_interactions = new List<string>(temp_selected_Interactions);
+                    // インタラクションの値になる箇所
+                    result_interaction_value = temp_interaction_filter;
                     call_id = "edit->end editing";
                 }
             }

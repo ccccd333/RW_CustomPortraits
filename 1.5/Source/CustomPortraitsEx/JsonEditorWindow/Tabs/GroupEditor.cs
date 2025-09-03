@@ -21,7 +21,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private List<string> temp_target_group_rows = new List<string>();
         private List<string> temp_remove_group_rows = new List<string>();
 
+        // グループのキー側
         public string result_edit_target_group_name = "";
+        // グループの値側
+        public List<string> result_target_group_rows = new List<string>();
 
         public void Draw(Rect inRect, List<string> selected_thoughts, List<string> selected_Interactions, List<string> result_interaction_filter, string selected_preset_name)
         {
@@ -83,38 +86,49 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             temp_group_filter.Clear();
             temp_target_group_rows.Clear();
             temp_remove_group_rows.Clear();
+            result_target_group_rows.Clear();
         }
 
         private void CreateOrEditGroup(Listing_Standard listing, string selected_preset_name)
         {
             listing.Label("グループの新規作成");
-
-            refs = PortraitCacheEx.Refs[selected_preset_name];
-
-            if (listing.ButtonText("グループを新規作成する"))
+            if (!PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
             {
-                call_id = "create";
-            }
-
-            temp_group_filter.Clear();
-            foreach (var kv in refs.group_filter)
-            {
-                if (!temp_group_filter.ContainsKey(kv.Value))
+                if (listing.ButtonText("グループを新規作成する"))
                 {
-                    temp_group_filter[kv.Value] = new List<string>();
+                    call_id = "create";
                 }
-                temp_group_filter[kv.Value].Add(kv.Key);
             }
-
-            listing.Label("既存のグループ編集");
-            foreach (var gf in temp_group_filter)
+            else
             {
-                
-                if (listing.ButtonText(gf.Key))
+
+
+                if (listing.ButtonText("グループを新規作成する"))
                 {
-                    call_id = "edit";
-                    edit_target_group_name = gf.Key;
-                    temp_target_group_rows = temp_group_filter[edit_target_group_name];
+                    call_id = "create";
+                }
+
+                refs = PortraitCacheEx.Refs[selected_preset_name];
+                temp_group_filter.Clear();
+                foreach (var kv in refs.group_filter)
+                {
+                    if (!temp_group_filter.ContainsKey(kv.Value))
+                    {
+                        temp_group_filter[kv.Value] = new List<string>();
+                    }
+                    temp_group_filter[kv.Value].Add(kv.Key);
+                }
+
+                listing.Label("既存のグループ編集");
+                foreach (var gf in temp_group_filter)
+                {
+
+                    if (listing.ButtonText(gf.Key))
+                    {
+                        call_id = "edit";
+                        edit_target_group_name = gf.Key;
+                        temp_target_group_rows = temp_group_filter[edit_target_group_name];
+                    }
                 }
             }
         }
@@ -242,6 +256,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (temp_target_group_rows.Count > 0)
                 {
                     result_edit_target_group_name = edit_target_group_name;
+                    result_target_group_rows = new List<string>(temp_target_group_rows);
                     call_id = "edit->end editing";
                 }
             }
