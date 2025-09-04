@@ -32,25 +32,25 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
             List<string> merged = new List<string>(selected_thoughts);
             merged.AddRange(result_interaction_filter);
-
-            listing.Label("ここはポーンの心情名と前工程で名前を決めたインタラクト名をグループ化するところです");
-            listing.Label("グループ化しないと心情名とインタラクト名の一つ一つに画像パスを書くことになり、それはとても大変です");
-            listing.Label("そんなに大量の画像は作っていられないと思うので、ある程度同じような心情などは");
-            listing.Label("一つのグループ名にして、そのグループ名で後工程の画像と紐づけるとためのものです");
+            
+            listing.Label(Helper.Label("RCP_GE_Desc1"));
+            listing.Label(Helper.Label("RCP_GE_Desc2"));
+            listing.Label(Helper.Label("RCP_GE_Desc3"));
+            listing.Label(Helper.Label("RCP_GE_Desc4"));
             
             listing.GapLine();
 
             if (merged.Count <= 0)
             {
-                listing.Label("「心情の選択」タブで一つ以上選択するか「インタラクトの振分」タブで振り分けてからこの画面を操作してください。");
+                listing.Label(Helper.Label("RCP_GE_Desc5"));
             }else if(selected_Interactions.Count > 0 && result_interaction_filter.Count == 0)
             {
-                listing.Label("「インタラクトの選択」タブで選択されています。");
-                listing.Label("「インタラクトの振分」タブでインタラクトを送り手と受け手に振り分けてからグループ分けしてください。");
+                listing.Label(Helper.Label("RCP_GE_Desc6"));
+                listing.Label(Helper.Label("RCP_GE_Desc7"));
             }
             else if (selected_preset_name == "")
             {
-                listing.Label("編集対象のプリセット名を一つ以上選択してください。");
+                listing.Label(Helper.Label("RCP_GE_Desc8"));
             }
             else
             {
@@ -91,19 +91,17 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
         private void CreateOrEditGroup(Listing_Standard listing, string selected_preset_name)
         {
-            listing.Label("グループの新規作成");
+            listing.Label(Helper.Label("RCP_GE_CreateOrEditGroupDesc1"));
             if (!PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
             {
-                if (listing.ButtonText("グループを新規作成する"))
+                if (listing.ButtonText(Helper.Label("RCP_B_Create")))
                 {
                     call_id = "create";
                 }
             }
             else
             {
-
-
-                if (listing.ButtonText("グループを新規作成する"))
+                if (listing.ButtonText(Helper.Label("RCP_B_Create")))
                 {
                     call_id = "create";
                 }
@@ -119,7 +117,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                     temp_group_filter[kv.Value].Add(kv.Key);
                 }
 
-                listing.Label("既存のグループ編集");
+                listing.Label(Helper.Label("RCP_GE_CreateOrEditGroupDesc2"));
                 foreach (var gf in temp_group_filter)
                 {
 
@@ -136,7 +134,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private void EnterGroupName(Listing_Standard listing)
         {
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "create->back";
             }
@@ -144,7 +142,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
 
             Rect enter_rect = listing.GetRect(30f);
-            Widgets.Label(enter_rect.LeftPart(0.6f), "グループ名を入力してください:");
+            Widgets.Label(enter_rect.LeftPart(0.6f), Helper.Label("RCP_GE_EnterGroupNameDesc1"));
 
             listing.GapLine();
 
@@ -153,7 +151,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
             listing.GapLine();
 
-            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
+            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Enter")))
             {
                 call_id = "create->enter name";
             }
@@ -163,27 +161,27 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private void EditGroup(Listing_Standard listing, List<string> merged)
         {
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "edit->back";
             }
 
             listing.GapLine();
 
-            listing.Label("どの心情名、インタラクト名をこのグループに含めるか選択してください");
-            listing.Label("後ほどこのグループ名でどのテクスチャを表示するかを決定します");
+            listing.Label(Helper.Label("RCP_GE_EditGroupDesc1"));
+            listing.Label(Helper.Label("RCP_GE_EditGroupDesc2"));
             Rect selected_rect = listing.GetRect(30f);
-            Widgets.Label(selected_rect.LeftPart(0.6f), "選択しているグループ名:");
+            Widgets.Label(selected_rect.LeftPart(0.6f), Helper.Label("RCP_GE_EditGroupDesc3"));
             Widgets.Label(selected_rect.RightPart(0.15f), edit_target_group_name);
 
-            listing.Label("追加済み");
+            listing.Label(Helper.Label("RCP_GE_EditGroupDesc4"));
             for (int i = temp_target_group_rows.Count - 1; i >= 0; i--)
             {
                 var row = temp_target_group_rows[i];
                 Rect row_rect = listing.GetRect(30f);
                 Widgets.Label(row_rect.LeftPart(0.6f), "     ==>" + row);
 
-                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), "はずす"))
+                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Remove")))
                 {
                     temp_target_group_rows.RemoveAt(i);
                     if (!temp_remove_group_rows.Contains(row))
@@ -196,8 +194,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
 
             Rect push_rect = listing.GetRect(30f);
-            Widgets.Label(push_rect.LeftPart(0.6f), "選択した心情とインタラクト");
-            if(Widgets.ButtonText(push_rect.RightPart(0.55f).LeftPart(0.7f), "全部追加する"))
+            Widgets.Label(push_rect.LeftPart(0.6f), Helper.Label("RCP_GE_EditGroupDesc5"));
+            if(Widgets.ButtonText(push_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_AddAll")))
             {
                 foreach (var row in merged)
                 {
@@ -220,7 +218,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 Widgets.Label(row_rect.LeftPart(0.6f), "     ==>" + row);
 
                 // SELECT ボタン
-                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), "追加する"))
+                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Add")))
                 {
                     if (!temp_target_group_rows.Contains(row))
                     {
@@ -231,7 +229,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
             listing.GapLine();
 
-            listing.Label("一度グループから外したもの(ゴミ箱)");
+            listing.Label(Helper.Label("RCP_GE_EditGroupDesc6"));
             foreach (var row in temp_remove_group_rows)
             {
 
@@ -240,7 +238,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 Widgets.Label(row_rect.LeftPart(0.6f), "     ==>" + row);
 
                 // SELECT ボタン
-                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), "追加する"))
+                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Add")))
                 {
                     if (!temp_target_group_rows.Contains(row))
                     {
@@ -251,7 +249,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
             Rect enter_rect = listing.GetRect(30f);
             
-            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
+            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Enter")))
             {
                 if (temp_target_group_rows.Count > 0)
                 {
@@ -266,19 +264,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private void EndEditing(Listing_Standard listing)
         {
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "edit->end editing->back";
             }
 
             listing.GapLine();
 
-            listing.Label("ここの設定は終わりです。この画面の状態で「ポートレートの選択」タブを入力してください");
-            listing.Label("もし入力内容に問題がある場合、お手数ですが「保存しないで戻る」を選択してください");
+            listing.Label(Helper.Label("RCP_GE_EndEditingDesc1"));
+            listing.Label(Helper.Label("RCP_GE_EndEditingDesc2"));
 
             listing.GapLine();
-            listing.Label($"編集したグループの名前：{edit_target_group_name}");
-            listing.Label($"このグループに含まれる心情やインタラクトの振り分けした名前：");
+            listing.Label($"{Helper.Label("RCP_GE_EndEditingDesc3")}{edit_target_group_name}");
+            listing.Label(Helper.Label("RCP_GE_EndEditingDesc4"));
             foreach (var kv in temp_target_group_rows)
             {
                 listing.Label($"    ==>{kv}");

@@ -24,14 +24,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             if (all_Interaction.Count == 0) InitializeInteractions();
 
             Rect reset_rect = listing.GetRect(30f);
-            Widgets.Label(reset_rect.LeftPart(0.6f), "Clear Selected");
-            if (Widgets.ButtonText(reset_rect.RightPart(0.55f).LeftPart(0.7f), "CLEAR"))
+            Widgets.Label(reset_rect.LeftPart(0.6f), Helper.Label("RCP_IB_ClearSelected"));
+            if (Widgets.ButtonText(reset_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Clear")))
             {
                 selected_Interactions.Clear();
             }
 
 
-            listing.Label("インタラクト名をフィルターする:");
+            listing.Label(Helper.Label("RCP_IB_InteractionFilter"));
             Rect filter_rect = listing.GetRect(30f);
             filter_text = Widgets.TextField(filter_rect, filter_text);
 
@@ -51,8 +51,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 }
                 catch (ArgumentException)
                 {
+                    string re = Helper.Label("RCP_IBE_RegexFilter");
                     // 正規表現エラー
-                    listing.Label($"正規表現が不正です: {filter_text}");
+                    listing.Label($"{re} {filter_text}");
                     filtered = new List<string>();
                 }
             }
@@ -65,7 +66,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 Widgets.Label(row_rect.LeftPart(0.6f), thought);
 
                 // SELECT ボタン
-                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), "SELECT"))
+                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Select")))
                 {
                     if (!selected_Interactions.Contains(thought))
                     {

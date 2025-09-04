@@ -41,7 +41,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
 
         public override string SettingsCategory()
         {
-            return "RCPEditor".Translate();
+            
+            return Helper.Label("RCPEditor");
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
@@ -54,31 +55,31 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
             }
             if (Tabs.Empty())
             {
-                Tabs.Add(new TabRecord("ダッシュボード", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab1"), () =>
                 {
                     SetTabInt(0);
                 }, tab_int == 0));
-                Tabs.Add(new TabRecord("心情の選択", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab2"), () =>
                 {
                     SetTabInt(1);
                 }, tab_int == 1));
-                Tabs.Add(new TabRecord("インタラクトの選択", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab3"), () =>
                 {
                     SetTabInt(2);
                 }, tab_int == 2));
-                Tabs.Add(new TabRecord("インタラクトの振分", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab4"), () =>
                 {
                     SetTabInt(3);
                 }, tab_int == 3));
-                Tabs.Add(new TabRecord("グループ化", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab5"), () =>
                 {
                     SetTabInt(4);
                 }, tab_int == 4));
-                Tabs.Add(new TabRecord("ポートレートの選択", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab6"), () =>
                 {
                     SetTabInt(5);
                 }, tab_int == 5));
-                Tabs.Add(new TabRecord("優先順位の設定", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPEditorTab7"), () =>
                 {
                     SetTabInt(6);
                 }, tab_int == 6));

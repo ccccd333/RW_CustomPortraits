@@ -26,13 +26,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
             if (all_thoughts.Count == 0) InitializeThoughts();
 
             Rect reset_rect = listing.GetRect(30f);
-            Widgets.Label(reset_rect.LeftPart(0.6f), "Clear Selected");
-            if (Widgets.ButtonText(reset_rect.RightPart(0.55f).LeftPart(0.7f), "CLEAR"))
+            Widgets.Label(reset_rect.LeftPart(0.6f), Helper.Label("RCP_TB_ClearSelected"));
+            if (Widgets.ButtonText(reset_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Clear")))
             {
                 selected_thoughts.Clear();
             }
 
-            listing.Label("心情名でフィルターする:");
+            listing.Label(Helper.Label("RCP_TB_ThoughtFilter"));
             Rect filter_rect = listing.GetRect(30f);
             filter_text = Widgets.TextField(filter_rect, filter_text);
 
@@ -53,7 +53,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
                 catch (ArgumentException)
                 {
                     // 正規表現エラー
-                    listing.Label($"正規表現が不正です: {filter_text}");
+                    string re = Helper.Label("RCP_TBE_RegexFilter");
+                    listing.Label($"{re} {filter_text}");
                     filtered = new List<string>();
                 }
             }
@@ -66,7 +67,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
                 Widgets.Label(row_rect.LeftPart(0.6f), thought);
 
                 // SELECT ボタン
-                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), "SELECT"))
+                if (Widgets.ButtonText(row_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Select")))
                 {
                     if (!selected_thoughts.Contains(thought))
                     {
@@ -158,7 +159,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
 
                     if (!all_thoughts.Contains(text) && text != "")
                     {
-                        string regex_pattern = Regex.Replace(text, @"\s*\{.*?\}\s*", ".*");
+                        string regex_pattern = Regex.Replace(text, @"\s*\{\d+\}\s*", ".*");
+
+                        regex_pattern = Regex.Replace(regex_pattern, @"\s*\{[A-Za-z_][A-Za-z0-9_]*\}\s*", ".*");
                         all_thoughts.Add(regex_pattern);
                     }
 

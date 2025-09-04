@@ -61,21 +61,21 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private void DrawEditorContent(Listing_Standard listing, Dictionary<string, bool> end_flags)
         {
 
-            listing.Label("RCPSelectPreset".Translate());
+            listing.Label(Helper.Label("RCP_DBR_SelectPreset"));
 
             List<string> presets = new List<string>(PortraitCacheEx.Refs.Keys);
-            listing.Label("Select an item from the list:");
+            listing.Label(Helper.Label("RCP_DBR_SelectAnItem"));
             listing.GapLine();
 
             Rect clear_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(clear_rect.RightPart(0.55f), "入力済みをクリア"))
+            if (Widgets.ButtonText(clear_rect.RightPart(0.55f), Helper.Label("RCP_B_InputClear")))
             {
                 call_id = "clear";
             }
 
             listing.GapLine();
 
-            if (listing.ButtonText("プリセットの新規作成"))
+            if (listing.ButtonText(Helper.Label("RCP_B_PresetCreate")))
             {
                 call_id = "json new";
             }
@@ -101,36 +101,38 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
 
             Rect edit_selected_json_rect = listing.GetRect(30f);
-            Widgets.Label(edit_selected_json_rect.LeftPart(0.6f), "選択されたプリセット名：");
+            Widgets.Label(edit_selected_json_rect.LeftPart(0.6f), Helper.Label("RCP_DBR_SelectFrom"));
             Widgets.Label(edit_selected_json_rect.RightPart(0.15f), selected_preset_name);
 
             listing.GapLine();
-
-            listing.Label("新規作成のプリセットでない且つ「優先順位の設定」のみ単体でチェックが入っていればJsonの書き込み可能です");
+            
+            listing.Label(Helper.Label("RCP_DBR_Validate"));
 
             listing.GapLine();
 
             foreach (var item in end_flags)
             {
-                bool marked_for = item.Value;
+                bool marked_for_tabs = item.Value;
 
                 Rect row_rect = listing.GetRect(30f);
 
                 // ラベル
                 Widgets.Label(row_rect.LeftPart(0.6f), $"「{item.Key}」");
                 Rect checkbox_rect = row_rect.RightPart(0.15f);
-                Widgets.Checkbox(checkbox_rect.x, checkbox_rect.y, ref marked_for);
+                Widgets.Checkbox(checkbox_rect.x, checkbox_rect.y, ref marked_for_tabs);
 
             }
 
             listing.GapLine();
 
+            bool marked_for = true;
+            bool marked_for_priority_weight = true;
+            bool marked_for_interaction_filter = true;
+
             Rect enter_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "JSONに書き込み"))
+            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_WriteJson")))
             {
-                bool marked_for = true;
-                bool marked_for_priority_weight = true;
-                bool marked_for_interaction_filter = true;
+
                 foreach (var item in end_flags)
                 {
                     if(item.Key != "PriorityWeightEditor" && item.Value)
@@ -178,23 +180,43 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                     json_write_modes.Add(WRITE_JSON_PW);
                 }                
             }
+
+            listing.GapLine();
+
+            if(!marked_for || !marked_for_interaction_filter || !marked_for_priority_weight)
+            {
+                if (!marked_for)
+                {
+                    listing.Label(Helper.Label("RCP_DBRE_Error1"));
+                }
+
+                if (!marked_for_interaction_filter)
+                {
+                    listing.Label(Helper.Label("RCP_DBRE_Error2"));
+                }
+
+                if (!marked_for_priority_weight)
+                {
+                    listing.Label(Helper.Label("RCP_DBRE_Error3"));
+                }
+            }
         }
 
         void DrawPresetNameInput(Listing_Standard listing)
         {
-            listing.Label("プリセット名の入力");
-            listing.Label("ここはRimWorld/CustomPortraitsに配置されている画像名の拡張子を除いたものを入力してください");
+            listing.Label(Helper.Label("RCP_DBR_InputPresetName"));
+            listing.Label(Helper.Label("RCP_DBR_InputPresetNameLable"));
             listing.GapLine();
 
             if (new_json_name != "" && PortraitCacheEx.Refs.ContainsKey(new_json_name))
             {
-                listing.Label("既に存在するプリセット名です。違う名前にしてください。");
+                listing.Label(Helper.Label("RCP_DBR_InputSamePresetName"));
             }
 
             listing.GapLine();
 
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "json new->back";
             }
@@ -203,13 +225,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
             Rect row = listing.GetRect(30f);
 
-            Widgets.Label(row.LeftPart(0.6f), "プリセット名を入力してください:");
+            Widgets.Label(row.LeftPart(0.6f), Helper.Label("RCP_DBR_EnterPresetName"));
 
             Rect text_rect = new Rect(row.x + row.width * 0.6f, row.y, row.width * 0.25f, row.height);
             new_json_name = Widgets.TextField(text_rect, new_json_name);
 
             Rect button_rect = new Rect(row.x + row.width * 0.87f, row.y, row.width * 0.13f, row.height);
-            if (Widgets.ButtonText(button_rect, "決定"))
+            if (Widgets.ButtonText(button_rect, Helper.Label("RCP_B_Enter")))
             {
                 new_json_name = new_json_name.Trim();
 

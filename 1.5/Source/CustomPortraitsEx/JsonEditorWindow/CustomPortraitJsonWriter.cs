@@ -136,6 +136,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
             {
                 work_conditions = new JObject();
             }
+            data["conditions"] = work_conditions;
 
             JObject work_interaction_filter;
             if (work_conditions.TryGetValue("interaction_filter", out JToken interaction_filter_copy))
@@ -154,7 +155,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
                 work_interaction_filter = new JObject();
             }
 
-            foreach(var rsi in ife_copy.result_selected_interactions)
+            work_conditions["interaction_filter"] = work_interaction_filter;
+
+            foreach (var rsi in ife_copy.result_selected_interactions)
             {
                 var riv = ife_copy.result_interaction_value;
                 work_interaction_filter[rsi] = new JObject()

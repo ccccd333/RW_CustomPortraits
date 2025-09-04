@@ -25,7 +25,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             //else
             {
                 Rect enter_rect = listing.GetRect(30f);
-                if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
+                if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Enter")))
                 {
                     call_id = "end";
                 }
@@ -33,29 +33,29 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 {
                     if (error_message1.Count == 0 && error_message2.Count == 0)
                     {
-                        listing.Label("エラーはないです決定ボタンを押下してください");
+                        listing.Label(Helper.Label("RCP_WJEW_Desc1"));
                         call_id = "no error";
                     }
                     else
                     {
-                        listing.Label("JSON書き込み後の再読取りで問題が起きた際のメッセージです");
-                        listing.Label("大体はプリセットの画像がない場合と思われます。Player.logを見てみると何処で止まっているかわかります");
-                        listing.Label("テクスチャがない以外でエラーが出るとそのプリセットは読み取れないため手修正もしくはバックアップフォルダで上書き後、ゲームの再起動をお願いします。");
-                        listing.Label("エラーの詳細は「RCP Reload JSON And Check Errors」で確認お願いします");
+                        listing.Label(Helper.Label("RCP_WJEW_Desc2"));
+                        listing.Label(Helper.Label("RCP_WJEW_Desc3"));
+                        listing.Label(Helper.Label("RCP_WJEW_Desc4"));
+                        listing.Label(Helper.Label("RCP_WJEW_Desc5"));
                         listing.GapLine();
 
-                        listing.Label($"プリセット名 ==> [{preset_name}]");
+                        listing.Label($"{Helper.Label("RCP_WJEW_Desc6")} ==> [{preset_name}]");
                         foreach (string error in error_message1)
                         {
-                            listing.Label($"ERROR MESSAGE ==> [{error}]");
+                            listing.Label($"{Helper.Label("RCP_WJEW_Desc7")} ==> [{error}]");
                         }
 
                         listing.GapLine();
 
-                        listing.Label($"プリセット名 ==> [InteractionFilter.json]");
+                        listing.Label($"{Helper.Label("RCP_WJEW_Desc6")} ==> [InteractionFilter.json]");
                         foreach (string error in error_message2)
                         {
-                            listing.Label($"ERROR MESSAGE ==> [{error}]");
+                            listing.Label($"{Helper.Label("RCP_WJEW_Desc7")} ==> [{error}]");
 
                         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,12 +14,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
     {
         private static int tab_int = 0;
         private List<TabRecord> Tabs = new List<TabRecord>();
-
+        private PresetStatusBrowser PresetStatusBrowser = new PresetStatusBrowser();
+        private PresetErrorReloader PresetErrorReloader = new PresetErrorReloader();
+        private PresetErrorBrowser PresetErrorBrowser = new PresetErrorBrowser();
         public ReloadJsonWithErrorsWindow(ModContentPack content) : base(content) { }
 
         public override string SettingsCategory()
         {
-            return "RCP Reload JSON And Check Errors";
+            return Helper.Label("RCPReloadJSONAndCheckErrors");
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
@@ -31,20 +34,38 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow
             }
             if (Tabs.Empty())
             {
-                Tabs.Add(new TabRecord("プリセット一覧", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPRJACE_EditorTab1"), () =>
                 {
                     SetTabInt(0);
                 }, tab_int == 0));
-                Tabs.Add(new TabRecord("JSONの再読み込み", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPRJACE_EditorTab2"), () =>
                 {
                     SetTabInt(1);
                 }, tab_int == 1));
-                Tabs.Add(new TabRecord("エラー一覧", () =>
+                Tabs.Add(new TabRecord(Helper.Label("RCPRJACE_EditorTab3"), () =>
                 {
                     SetTabInt(2);
                 }, tab_int == 2));
             }
             TabDrawer.DrawTabs(tabsRect, Tabs);
+
+
+            switch (tab_int)
+            {
+                case 0:
+                    Tabs[0].selected = true;
+                    PresetStatusBrowser.Draw(inRect);
+                    break;
+                case 1:
+                    Tabs[1].selected = true;
+                    PresetErrorReloader.Draw(inRect);
+                    break;
+                case 2:
+                    Tabs[2].selected = true;
+                    PresetErrorBrowser.Draw(inRect);
+                    break;
+
+            }
         }
 
         private void SetTabInt(int i)

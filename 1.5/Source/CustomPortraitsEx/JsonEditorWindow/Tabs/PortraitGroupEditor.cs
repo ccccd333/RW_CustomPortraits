@@ -39,16 +39,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         public void Draw(Rect inRect, string edit_target_group_name, string selected_preset_name)
         {
             Listing_Standard listing = Begin(inRect);
-            listing.Label("ここは「ポートレートの選択」タブです");
-            listing.Label("心情などを前工程でグループ化されているため、そのグループ名とここに定義するポートレートを紐づけます");
-            listing.Label("例えば世間話ならこのポートレート、侮辱されたならこのポートレートみたいな設定です");
-            listing.Label("アニメーションの場合は複数のDDS(DXT1)画像のみとなります");
-            listing.Label("アニメーション以外の場合はPNGもしくはDDS(DXT1)画像となります");
+            listing.Label(Helper.Label("RCP_PG_Desc1"));
+            listing.Label(Helper.Label("RCP_PG_Desc2"));
+            listing.Label(Helper.Label("RCP_PG_Desc3"));
+            listing.Label(Helper.Label("RCP_PG_Desc4"));
+            listing.Label(Helper.Label("RCP_PG_Desc5"));
             listing.GapLine();
 
             if (edit_target_group_name == "")
             {
-                listing.Label("「グループ化」タブが完了後にこのタブで編集してください");
+                listing.Label(Helper.Label("RCP_PG_Desc6"));
             }
             else
             {
@@ -101,11 +101,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
         private void EditPortraitGroup(Listing_Standard listing, string edit_target_group_name, string selected_preset_name)
         {
-            listing.Label("ポートレートとグループ名の紐づけ");
+            listing.Label(Helper.Label("RCP_PG_EditPortraitGroupDesc1"));
             listing.GapLine();
 
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "back";
             }
@@ -118,7 +118,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (refs.txs.ContainsKey(edit_target_group_name))
                 {
 
-                    listing.Label($"既に紐づいているグループが存在するため初期値はこちらを使用します：{edit_target_group_name}");
+                    listing.Label($"{Helper.Label("RCP_PG_EditPortraitGroupDesc2")}{edit_target_group_name}");
                     if (!edited_cache_flag)
                     {
                         var tx = refs.txs[edit_target_group_name];
@@ -140,14 +140,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
         private void EditIdlePortrait(Listing_Standard listing, string selected_preset_name)
         {
-            listing.Label("アイドル状態のポートレートの設定");
-            listing.Label("重み設定で一つも状態が選ばれなかった場合に設定するアイドル用の画像です");
-            listing.Label("毎回同じ心情の画像を表示ではなく、確率の場合例えば99%でも処理が抜けてきます");
-            listing.Label("そのため何も選ばれなかった場合の画像の設定です");
+            listing.Label(Helper.Label("RCP_PG_EditIdlePortraitDesc1"));
+            listing.Label(Helper.Label("RCP_PG_EditIdlePortraitDesc2"));
+            listing.Label(Helper.Label("RCP_PG_EditIdlePortraitDesc3"));
+            listing.Label(Helper.Label("RCP_PG_EditIdlePortraitDesc4"));
             listing.GapLine();
 
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "edit portrait group->back";
             }
@@ -158,7 +158,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (refs.txs.ContainsKey("Idle"))
                 {
 
-                    listing.Label($"既にIdleが存在するため初期値はこちらを使用します：Idle");
+                    listing.Label($"{Helper.Label("RCP_PG_EditIdlePortraitDesc5")}Idle");
                     if (!edited_idle_cache_flag)
                     {
                         var tx = refs.txs["Idle"];
@@ -179,13 +179,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
         private void EditDeadPortrait(Listing_Standard listing, string selected_preset_name)
         {
-            listing.Label("死亡状態のポートレートの設定");
-            listing.Label("ポーンは死亡した段階で心情がなくなります");
-            listing.Label("この状態では何もポートレートが表示できなくなるので死亡状態のポートレート設定を行います");
+            listing.Label(Helper.Label("RCP_PG_EditDeadPortraitDesc1"));
+            listing.Label(Helper.Label("RCP_PG_EditDeadPortraitDesc2"));
+            listing.Label(Helper.Label("RCP_PG_EditDeadPortraitDesc3"));
             listing.GapLine();
 
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "edit portrait group->edit dead->back";
             }
@@ -196,7 +196,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 if (refs.txs.ContainsKey("Dead"))
                 {
 
-                    listing.Label($"既にDeadが存在するため初期値はこちらを使用します：Dead");
+                    listing.Label($"{Helper.Label("RCP_PG_EditDeadPortraitDesc4")}Dead");
                     if (!edited_dead_cache_flag)
                     {
                         var tx = refs.txs["Dead"];
@@ -218,27 +218,27 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private void EndEditing(Listing_Standard listing)
         {
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "edit end->back";
             }
 
             listing.GapLine();
 
-            listing.Label("ここの設定は終わりです。この画面の状態で「ポートレートの表示する優先順位を設定」タブを入力してください");
-            listing.Label("もし入力内容に問題がある場合、お手数ですが「保存しないで戻る」を選択してください");
+            listing.Label(Helper.Label("RCP_PG_EndEditingDesc1"));
+            listing.Label(Helper.Label("RCP_PG_EndEditingDesc2"));
 
             listing.GapLine();
-            listing.Label($"ポートレートのパス：{result_texture_meta.file_path}");
-            listing.Label($"アニメーション画像か：{result_texture_meta.IsAnimation}");
-            listing.Label($"画面表示時間(秒)：{result_texture_meta.display_duration}");
+            listing.Label($"{Helper.Label("RCP_PG_EndEditingDesc3")}{result_texture_meta.file_path}");
+            listing.Label($"{Helper.Label("RCP_PG_EndEditingDesc4")}{result_texture_meta.IsAnimation}");
+            listing.Label($"{Helper.Label("RCP_PG_EndEditingDesc5")}{result_texture_meta.display_duration}");
         }
 
         private void PortraitEditTemplate(Listing_Standard listing, TextureMeta meta, ref TextureMeta result_meta, string selected_preset_name, string edit_target_group_name, ref string work_display_duration, string id)
         {
-            listing.Label("ポートレートの基準となるパスです");
-            listing.Label("フォーマットは「{Preset名}/{グループ名}/」となっております");
-            listing.Label("この後Json再度読み込み時はここに画像を置いていく形になります");
+            listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc1"));
+            listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc2"));
+            listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc3"));
 
             Rect base_path_rect = listing.GetRect(30f);
             meta.file_base_path = $"{selected_preset_name}/{edit_target_group_name}/";
@@ -247,15 +247,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
             listing.GapLine();
 
-            listing.Label("アニメーションポートレートの場合選択を押してください");
+            listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc4"));
 
             Rect is_anim_rect = listing.GetRect(30f);
 
             // ラベル
-            Widgets.Label(is_anim_rect.LeftPart(0.6f), "アニメーションにするか");
+            Widgets.Label(is_anim_rect.LeftPart(0.6f), Helper.Label("RCP_PG_PortraitEditTemplateDesc5"));
 
             // SELECT ボタン
-            if (Widgets.ButtonText(is_anim_rect.RightPart(0.55f).LeftPart(0.7f), "SELECT"))
+            if (Widgets.ButtonText(is_anim_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Select")))
             {
                 meta.IsAnimation = !meta.IsAnimation;
             }
@@ -266,7 +266,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             Widgets.Checkbox(checkbox_rect.x, checkbox_rect.y, ref is_anim);
 
             listing.GapLine();
-            listing.Label("現在表示中のポートレートが心情などによって別のポートレートに切り替わる時間を設定してください");
+            listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc6"));
 
             Rect input_f_rect = listing.GetRect(30f);
             float rv = meta.display_duration;
@@ -278,8 +278,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
             if (meta.IsAnimation)
             {
-                listing.Label("アニメーション画像の場合from-toの番号を入れます");
-                listing.Label("fromは1固定でtoはアニメーション画像の終端の画像名(1.dds~79.ddsの場合79)を入れます");
+                listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc7"));
+                listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc8"));
 
                 meta.file_path_first = "1";
                 listing.Label($"From==>{meta.file_path_first}");
@@ -296,28 +296,28 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
                 listing.GapLine();
 
-                listing.Label("アニメーション画像の場合DDS(DXT1)固定です");
+                listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc9"));
                 meta.d = ".dds";
-                listing.Label($"Extension==>{meta.d}");
+                listing.Label($"{Helper.Label("RCP_PG_PortraitEditTemplateDesc10")}==>{meta.d}");
 
                 meta.file_path = meta.file_base_path + meta.file_path_first + meta.d + "~" + meta.file_path_second + meta.d;
             }
             else
             {
-                listing.Label("状態変化時1枚の画像を表示する場合");
-                listing.Label("fromは1固定でtoは何も設定しません。ですので「{Preset名}/{グループ名}/」に1.ddsもしくは1.pngを配置してください");
+                listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc11"));
+                listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc12"));
 
                 meta.file_path_first = "1";
                 listing.Label($"From==>{meta.file_path_first}");
 
-                listing.Label("1枚の画像だけを表示する場合の画像の拡張子を選んでください");
-                listing.Label($"Extension==>{meta.d}");
+                listing.Label(Helper.Label("RCP_PG_PortraitEditTemplateDesc13"));
+                listing.Label($"{Helper.Label("RCP_PG_PortraitEditTemplateDesc14")}==>{meta.d}");
 
                 Rect is_ext_dds_rect = listing.GetRect(30f);
                 Widgets.Label(is_ext_dds_rect.LeftPart(0.6f), ".dds");
 
                 // SELECT ボタン
-                if (Widgets.ButtonText(is_ext_dds_rect.RightPart(0.55f).LeftPart(0.7f), "SELECT"))
+                if (Widgets.ButtonText(is_ext_dds_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Select")))
                 {
                     meta.d = ".dds";
                 }
@@ -331,7 +331,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
                 Widgets.Label(is_ext_png_rect.LeftPart(0.6f), ".png");
 
                 // SELECT ボタン
-                if (Widgets.ButtonText(is_ext_png_rect.RightPart(0.55f).LeftPart(0.7f), "SELECT"))
+                if (Widgets.ButtonText(is_ext_png_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Select")))
                 {
                     meta.d = ".png";
                 }
@@ -354,7 +354,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             }
 
             Rect enter_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
+            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Enter")))
             {
                 bool check = true;
                 error_list.Clear();

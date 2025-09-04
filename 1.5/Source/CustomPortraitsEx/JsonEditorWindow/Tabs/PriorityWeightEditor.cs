@@ -27,15 +27,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         public void Draw(Rect inRect, string edit_target_group_name, string selected_preset_name)
         {
             Listing_Standard listing = Begin(inRect);
-            listing.Label("ここは「優先順位」タブです");
-            listing.Label("画像をポーンの状態によって表示順位を決定します");
-            listing.Label("例えばＡとＢの状態でどっちを優先的に表示したいか");
-            listing.Label("Ａの状態はこの確率で選択されるみたいなのを決めるところです");
+            listing.Label(Helper.Label("RCP_PW_Desc1"));
+            listing.Label(Helper.Label("RCP_PW_Desc2"));
+            listing.Label(Helper.Label("RCP_PW_Desc3"));
+            listing.Label(Helper.Label("RCP_PW_Desc4"));
             listing.GapLine();
 
             if(selected_preset_name == "")
             {
-                listing.Label("プリセットを選択してください");
+                listing.Label(Helper.Label("RCP_PW_Desc5"));
              
             }
             else if (!PortraitCacheEx.Refs.ContainsKey(selected_preset_name))
@@ -124,11 +124,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
         private void ShiftItem(Listing_Standard listing)
         {
-            listing.Label("グループ名の優先順位設定");
+            listing.Label(Helper.Label("RCP_PW_ShiftItemDesc1"));
             listing.GapLine();
 
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "back";
             }
@@ -168,7 +168,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
 
             Rect enter_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
+            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Enter")))
             {
                 call_id = "order end";
             }
@@ -176,11 +176,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
 
         private void DrawPriorityWeights(Listing_Standard listing)
         {
-            listing.Label("確率設定");
+            listing.Label(Helper.Label("RCP_PW_DrawPriorityWeightsDesc1"));
             listing.GapLine();
 
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "order end->back";
             }
@@ -213,7 +213,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
             listing.GapLine();
 
             Rect enter_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), "決定"))
+            if (Widgets.ButtonText(enter_rect.RightPart(0.55f).LeftPart(0.7f), Helper.Label("RCP_B_Enter")))
             {
                 call_id = "order end->weight end";
 
@@ -225,14 +225,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.JsonEditorWindow.Tabs
         private void EndEditing(Listing_Standard listing)
         {
             Rect back_rect = listing.GetRect(30f);
-            if (Widgets.ButtonText(back_rect.RightPart(0.55f), "保存しないで戻る"))
+            if (Widgets.ButtonText(back_rect.RightPart(0.55f), Helper.Label("RCP_B_Back")))
             {
                 call_id = "order end->weight end->back";
             }
 
             listing.GapLine();
 
-            listing.Label("ここの設定は終わりです。ダッシュボードに戻って「JSONの書き出し」ボタンを押下してください");
+            listing.Label(Helper.Label("RCP_PW_EndEditingDesc1"));
         }
 
 
