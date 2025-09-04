@@ -154,7 +154,7 @@ namespace Foxy.CustomPortraits {
 			RenderTexture.active = flip;
 			Graphics.Blit(temp, flip, new Vector2(1, -1), new Vector2(0, 1));
 
-			tex.Reinitialize(temp.width, temp.height, TextureFormat.ARGB32, false);
+			tex.Resize(temp.width, temp.height, TextureFormat.ARGB32, false);
 			tex.ReadPixels(new Rect(0, 0, temp.width, temp.height), 0, 0);
 			tex.Apply();
 			RenderTexture.active = prev;
