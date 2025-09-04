@@ -8,20 +8,4 @@
       </li>
     </value>
   </Operation>
-
-  <Operation Class="PatchOperationAdd">
-    <xpath>/Defs/*[local-name()='AlienRace.ThingDef_AlienRace'][not(@Abstract='True')][not(comps)]</xpath>
-    <value>
-      <comps />
-    </value>
-  </Operation>
-
-  <Operation Class="PatchOperationAdd">
-    <xpath>/Defs/*[local-name()='AlienRace.ThingDef_AlienRace'][not(@Abstract='True')]/comps</xpath>
-    <value>
-      <li>
-        <compClass>Comp_FoxyPawnCustomPortrait</compClass>
-      </li>
-    </value>
-  </Operation>
 </Patch>

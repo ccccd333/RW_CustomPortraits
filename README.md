@@ -102,6 +102,10 @@ _Normalize presentation of alternatives!_
 
 # ![Changelog](https://i.postimg.cc/k4T4mtyF/h-Changelog.png)
 
+#### 05.09.25
+
+- HAR compat errors fixed.
+
 #### 02.09.25
 
 - HAR support. (Tested on [Aya] Silkiera Race)
