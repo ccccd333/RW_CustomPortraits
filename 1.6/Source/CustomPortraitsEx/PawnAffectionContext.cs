@@ -7,7 +7,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 {
     public static class PawnAffectionContext
     {
-        public static Dictionary<string, float> ComposeAffectionImpactMap(Pawn pawn, out bool isValueFetched)
+        public static Dictionary<string, float> ComposeAffectionImpactMap(Pawn pawn, out bool is_value_fetched)
         {
             Dictionary<string, float> affection_impact_map = new Dictionary<string, float>();
             CollectMoodThoughtImpacts(pawn, affection_impact_map);
@@ -16,11 +16,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
             if (affection_impact_map.Count > 0)
             {
-                isValueFetched = true;
+                is_value_fetched = true;
             }
             else
             {
-                isValueFetched = false;
+                is_value_fetched = false;
             }
 
             return affection_impact_map;
@@ -103,7 +103,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             
             bool drafted = pawn.drafter?.Drafted ?? false;
 
-            Log.Message($"[PortraitsEx] CombatContext ==> drafted? {drafted}");
+            //Log.Message($"[PortraitsEx] CombatContext ==> drafted? {drafted}");
 
             affection_impact_map["CombatContext"] = 1.0f;
 
