@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="Comp_PawnCustomPortrait.cs" />
     <Compile Include="CustomPortraitsEx\ConditionDrivenPortrait.cs" />
+    <Compile Include="CustomPortraitsEx\Interrupt\PainInterruptContextResolver.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\CustomPortraitJsonWriter.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\JsonEditorWindow.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\ReloadJsonWithErrorsWindow.cs" />
@@ -80,10 +81,12 @@
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\Tabs\TabBase.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\Tabs\ThoughtBrowser.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\Tabs\WriteJsonErrorWindow.cs" />
-    <Compile Include="CustomPortraitsEx\PawnAffectionContext.cs" />
+    <Compile Include="CustomPortraitsEx\PawnPortraitContext.cs" />
+    <Compile Include="CustomPortraitsEx\PawnPortraitInterruptContext.cs" />
     <Compile Include="CustomPortraitsEx\PExSetting.cs" />
     <Compile Include="CustomPortraitsEx\PlayLogEntry_Interaction_ctor.cs" />
     <Compile Include="CustomPortraitsEx\PortraitCacheEx.cs" />
+    <Compile Include="CustomPortraitsEx\PortraitContextKeys.cs" />
     <Compile Include="CustomPortraitsEx\Repository\Group.cs" />
     <Compile Include="CustomPortraitsEx\Repository\InteractionFilter.cs" />
     <Compile Include="CustomPortraitsEx\Repository\InteractionSelectionMap.cs" />
@@ -124,6 +127,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Unity.Newtonsoft.Json.dll" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="CustomPortraitsEx\Interrupt\~InterruptContextResolver.cs here" />
+    <None Include="CustomPortraitsEx\Steady\~ContextResolver.cs here" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

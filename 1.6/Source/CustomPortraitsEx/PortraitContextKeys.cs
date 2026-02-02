@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Foxy.CustomPortraits.CustomPortraitsEx
+{
+    public static class PortraitContextKeys
+    {
+        // Interrupt contexts
+        public const string PAIN_INCREASE = "PainIncrease";
+        // Steady contexts
+        public const string COMBAT_CONTEXT = "CombatContext";
+    }
+}
