@@ -36,7 +36,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Interrupt
             float now_value = tracked_pawn.health.hediffSet.PainTotal;
             if (now_value > last_pain_total)
             {
-                Log.Message($"[PortraitsEx] PainInterruptContextResolver ADD ==> tracked_pawn {tracked_pawn} now_value {now_value} last_pain_total {last_pain_total}");
+                //Log.Message($"[PortraitsEx] PainInterruptContextResolver ADD ==> tracked_pawn {tracked_pawn} now_value {now_value} last_pain_total {last_pain_total}");
 
                 // 痛みが発生した(ダメージを受けたか、持病の悪化など)
                 last_pain_total = now_value;

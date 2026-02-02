@@ -117,48 +117,81 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
 
                     var refs = mood_refs[preset_name];
-                    string mood_name = "";
+                    string portrait_context_name = "";
 
                     if (pawn.Dead)
                     {
                         // ポーンが死亡している場合
                         if (refs.fallback_mood_on_death == "") return def;
                         // 死んでいる場合はjsonのfallback_mood_on_deathを使う。
-                        mood_name = refs.fallback_mood_on_death;
+                        portrait_context_name = refs.fallback_mood_on_death;
                     }
                     else
                     {
-                        //bool intr_is_value_fetched = false;
-                        //Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
-                        //// 割り込み計算。あまり大きくなるようなら別スレッド。
-                        //intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, out intr_is_value_fetched);
-                        //if (!is_interrupt_active && intr_is_value_fetched)
-                        //{
-                        //    // 割り込みが発生した場合、割り込みフラグをtrueにする。
-                        //    // 以降割り込みはtemp_display_durationまで、タイマー処理を通常運行側で処理させる。
-                        //    // そのためその間は割り込みは発生しない
-                        //    // temp_display_duration過ぎた後に平常運転になったら、再度割り込みフラグがfalseになる
-                        //    // なので割り込み→割り込みはなく、割り込み→平常運転→平常運転キャンセル割り込みとなる。
-                        //    // ダメージ系はスパンが短いものは違和感ないはず。
-                        //    // 割り込みのクールタイムを考えたがそれならtemp_display_durationに委ねたほうがユーザー側で操作しやすい
-                        //    is_interrupt_active = true;
-                        //    // 割り込み時点から計算するためtemp_display_durationを現在時刻で初期化
-                        //    disp_last_update_time = Time.realtimeSinceStartup;
+
+                        bool intr_is_value_fetched = false;
+                        Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
+                        if (refs.interrupt.interrupt_enabled)
+                        {
+                            // 割り込み計算。あまり大きくなるようなら別スレッド。
+                            intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, out intr_is_value_fetched);
+                        }
+
+                        if (!is_interrupt_active && intr_is_value_fetched)
+                        {
+                            // 割り込みが発生した場合、割り込みフラグをtrueにする。
+                            // 以降割り込みはtemp_display_durationまで、タイマー処理を通常運行側で処理させる。
+                            // そのためその間は割り込みは発生しない
+                            // temp_display_duration過ぎた後に平常運転になったら、再度割り込みフラグがfalseになる
+                            // なので割り込み→割り込みはなく、割り込み→平常運転→平常運転キャンセル割り込みとなる。
+                            // ダメージ系はスパンが短いものは違和感ないはず。
+                            // 割り込みのクールタイムを考えたがそれならtemp_display_durationに委ねたほうがユーザー側で操作しやすい
+                            is_interrupt_active = true;
+                            // 割り込み時点から計算するためtemp_display_durationを現在時刻で初期化
+                            disp_last_update_time = Time.realtimeSinceStartup;
 
 
-                        //    bool is_resolved = false;
-                        //    mood_name = ResolveInterruptPortraitContextName(pawn, refs, intr_impact_map, out is_resolved);
-                        //    if (!is_resolved)
-                        //    {
-                        //        // 割り込み用のキーグループは書いてあるけど、空の場合とか
-                        //        // 本来の運用から外れている場合
-                        //        Log.Error("[PortraitsEx] ResolveInterruptPortraitContextName ===> no result.");
-                        //        return def;
-                        //    }
+                            bool is_resolved = false;
+                            bool no_match = false;
+                            portrait_context_name = ResolveInterruptPortraitContextName(pawn, refs, intr_impact_map, out is_resolved, out no_match);
+                            if (!is_resolved)
+                            {
+                                // 割り込み用のキーグループは書いてあるけど、空の場合とか
+                                // 本来の運用から外れている場合
+                                Log.Error("[PortraitsEx] ResolveInterruptPortraitContextName ===> no result.");
+                                return def;
+                            }
 
-                        //    Log.Message($"[PortraitsEx] Interrupt ==> mood_name {mood_name}");
-                        //}
-                        //else
+                            if(no_match && PortraitCacheEx.Settings.interrupt_fallback_to_steady)
+                            {
+                                // ポーンが生きていて、割り込み処理(ダメージ受けた系)ではない場合は
+                                // こちらでJson内容とゲームパラメータで突き合わせる
+                                bool is_value_fetched = false;
+                                Dictionary<string, float> impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out is_value_fetched);
+
+                                if (!is_value_fetched)
+                                {
+                                    // 途中で処理を抜けた(心情取れないとか)の場合、デフォルトの画像キャッシュを返却
+                                    // ただ、ゲーム内のものなので本来ないはず
+                                    Reset();
+                                    return def;
+                                }
+
+                                portrait_context_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
+                                if (!is_resolved)
+                                {
+                                    // こちらはそもそも突き合わせたけど何もないやつ
+                                    // ないはず。一応監視。
+                                    Log.Error("[PortraitsEx][INTERRUPT FALLBACK] ResolveSteadyPortraitContextName ===> no result.");
+                                    return def;
+                                }
+
+                                //Log.Message($"[PortraitsEx][INTERRUPT FALLBACK] name ==> {portrait_context_name}");
+                            }
+
+                            //Log.Message($"[PortraitsEx] Interrupt ==> portrait_context_name {portrait_context_name}");
+                        }
+                        else
                         {
 
                             if (temp_preset_name == preset_name)
@@ -200,7 +233,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 return def;
                             }
 
-                            mood_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
+                            portrait_context_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
                             if (!is_resolved)
                             {
                                 // こちらはそもそも突き合わせたけど何もないやつ
@@ -212,7 +245,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             is_interrupt_active = false;
                         }
                     }
-                    return UpdatePortraitByContext(mood_name, next_portrait, skip_count, def, refs, preset_name);
+                    return UpdatePortraitByContext(portrait_context_name, next_portrait, skip_count, def, refs, preset_name);
 
 
                 }
@@ -223,7 +256,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         private static string ResolveSteadyPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved)
         {
-            string mood_name = "";
+            string portrait_context_name = "";
             //Dictionary<string, float> impact_map;
 
             is_resolved = false;
@@ -245,7 +278,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             // filtered_group_filterに一旦重複してもいいので入れていく。
             var filtered_group_filter = FilterGroupMatches(refs.g_regex_cache, refs.group_filter, impact_map);
 
-            // 心情+社交が一切ない(?)。
+            // 心情+社交などが一切ない。
             if (filtered_group_filter.Count() <= 0 && impact_map.Count() <= 0)
             {
                 return "";
@@ -315,7 +348,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     //Log.Message($"[PortraitsEx] name: {kvp.Value.filter_name} seed: {seed} weight: {weight}");
                     if (seed < weight)
                     {
-                        mood_name = kvp.Value.filter_name;
+                        portrait_context_name = kvp.Value.filter_name;
                         pic = true;
                         break;
                     }
@@ -328,47 +361,47 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
 
 
-            //Log.Message($"[PortraitsEx] mood_name: {mood_name} ");
+            //Log.Message($"[PortraitsEx] portrait_context_name: {portrait_context_name} ");
 
             // 抽出した心情+社交値名がなければ、jsonのfallback_moodを使う。
-            if (mood_name == "")
+            if (portrait_context_name == "")
             {
                 if (refs.fallback_mood == "")
                 {
-                    mood_name = "def";
+                    portrait_context_name = "def";
                 }
                 else
                 {
-                    mood_name = refs.fallback_mood;
+                    portrait_context_name = refs.fallback_mood;
                 }
             }
             is_resolved = true;
-            return mood_name;
+            return portrait_context_name;
         }
 
-        private static string ResolveInterruptPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved)
+        private static string ResolveInterruptPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved, out bool no_match)
         {
-            string mood_name = "";
+            string portrait_context_name = "";
             //Dictionary<string, float> impact_map;
 
             is_resolved = false;
+            no_match = false;
 
 
-
-            //foreach(var k in refs.group_filter)
+            //foreach (var k in refs.interrupt.group_filter)
             //{
-            //    Log.Message($"[PortraitsEx] refs.group_filter ==> Key {k.Key} Value {k.Value}");
+            //    Log.Message($"[PortraitsEx] refs.interrupt.group_filter ==> Key {k.Key} Value {k.Value}");
             //}
 
-            //foreach (var k in mood)
+            //foreach (var k in impact_map)
             //{
-            //    Log.Message($"[PortraitsEx] mood ==> Key {k.Key} Value {k.Value}");
+            //    Log.Message($"[PortraitsEx] impact_map ==> Key {k.Key} Value {k.Value}");
             //}
 
 
             // jsonのグループのキー(Group名)と値(心情+社交名)mood_and_last_social(心情+社交の文字と値)のキーと一致する場合
             // filtered_group_filterに一旦重複してもいいので入れていく。
-            var filtered_group_filter = FilterGroupMatches(refs.g_regex_cache, refs.group_filter, impact_map);
+            var filtered_group_filter = FilterGroupMatches(null, refs.interrupt.group_filter, impact_map);
 
             // 心情+社交が一切ない(?)。
             if (filtered_group_filter.Count() <= 0 && impact_map.Count() <= 0)
@@ -415,7 +448,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
             // jsonのpriority_weightsの上から順にとmerged_keysのキーと突き合わせて行く。
             // priority_weightsと一致するもののみがmatched_priority_weightsに入る。
-            var matched_priority_weights = ExtractMatchedPriorityWeights(refs.priority_weight_order, refs.pw_regex_cache, refs.priority_weights, merged_keys);
+            var matched_priority_weights = ExtractMatchedPriorityWeights(refs.interrupt.priority_weight_order, null, refs.interrupt.priority_weights, merged_keys);
 
             //int logc = 1;
             //foreach (var mpw in matched_priority_weights)
@@ -440,7 +473,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     //Log.Message($"[PortraitsEx] name: {kvp.Value.filter_name} seed: {seed} weight: {weight}");
                     if (seed < weight)
                     {
-                        mood_name = kvp.Value.filter_name;
+                        portrait_context_name = kvp.Value.filter_name;
                         pic = true;
                         break;
                     }
@@ -453,34 +486,36 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
 
 
-            //Log.Message($"[PortraitsEx] mood_name: {mood_name} ");
+            //Log.Message($"[PortraitsEx] portrait_context_name: {portrait_context_name} ");
 
-            // 抽出した心情+社交値名がなければ、jsonのfallback_moodを使う。
-            if (mood_name == "")
+            // 全てマッチしない場合、jsonのfallback_moodを使う。
+            if (portrait_context_name == "")
             {
+                no_match = true;
+
                 if (refs.fallback_mood == "")
                 {
-                    mood_name = "def";
+                    portrait_context_name = "def";
                 }
                 else
                 {
-                    mood_name = refs.fallback_mood;
+                    portrait_context_name = refs.fallback_mood;
                 }
             }
             is_resolved = true;
-            return mood_name;
+            return portrait_context_name;
         }
 
 
-        private static Texture2D UpdatePortraitByContext(string mood_name, bool next_portrait, int skip_count, Texture2D def, Refs refs, string preset_name)
+        private static Texture2D UpdatePortraitByContext(string portrait_context_name, bool next_portrait, int skip_count, Texture2D def, Refs refs, string preset_name)
         {
-            if (mood_name != temp_refs_key)
+            if (portrait_context_name != temp_refs_key)
             {
                 // 心情+社交名と既に退避済みの心情+社交名が一致しないとき
                 Reset();
                 string access_key = "";
 
-                if (refs.MatchDictKeysByRegex(mood_name, out access_key))
+                if (refs.MatchDictKeysByRegex(portrait_context_name, out access_key))
                 {
                     return CacheTextureIfKeyMatches(def, refs, preset_name, access_key);
 
@@ -619,7 +654,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 bool match_found = false;
 
-                if (g_regex_cache.ContainsKey(kvp.Key))
+                if (g_regex_cache != null && g_regex_cache.ContainsKey(kvp.Key))
                 {
                     var reg = g_regex_cache[kvp.Key];
                     foreach (var mood_key in mood.Keys)
@@ -663,7 +698,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                 var vp = priority_weights[kp];
                 Dictionary<string, PriorityWeights> dict = new Dictionary<string, PriorityWeights>();
-                if (pw_regex_cache.ContainsKey(kp))
+                if (pw_regex_cache != null && pw_regex_cache.ContainsKey(kp))
                 {
                     var reg = pw_regex_cache[kp];
                     var lis = new List<string>();

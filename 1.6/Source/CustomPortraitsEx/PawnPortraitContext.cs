@@ -27,6 +27,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         }
 
+        // 以降特に監視する必要ない場合はここにメソッドを書いていく
+        // 特定の値が必要ならSteady配下にクラスを作って
+
         // 心情
         public static void CollectMoodThoughtImpacts(Pawn pawn, Dictionary<string, float> impact_map)
         {
