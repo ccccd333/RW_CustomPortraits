@@ -13,7 +13,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             CollectMoodThoughtImpacts(pawn, impact_map);
             CollectInteractionImpacts(pawn, impact_map);
             AppendCombatContextImpact(pawn, impact_map);
-
+            AppendDownedContext(pawn, impact_map);
             if (impact_map.Count > 0)
             {
                 is_value_fetched = true;
@@ -107,6 +107,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             if (drafted)
             {
                 impact_map[PortraitContextKeys.COMBAT_CONTEXT] = 1.0f;
+            }
+        }
+
+        // ダウン中
+        public static void AppendDownedContext(Pawn pawn, Dictionary<string, float> impact_map)
+        {
+            bool downed = pawn?.health?.Downed ?? false;
+            if (downed)
+            {
+                impact_map[PortraitContextKeys.STEADY_DOWNED] = 1.0f;
             }
         }
     }

@@ -1,31 +1,30 @@
 ﻿using Foxy.CustomPortraits.CustomPortraitsEx.Interrupt;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Verse;
 
 namespace Foxy.CustomPortraits.CustomPortraitsEx
 {
     public static class PawnPortraitInterruptContext
     {
-        static PainInterruptContextResolver pain_interrupt_context_resolver = new PainInterruptContextResolver();
-
-        public static Dictionary<string, float> ComposeImpactMap(Pawn pawn, PortraitInterrupt interrupt, out bool is_value_fetched)
+        public static PainInterruptContextResolver pain_interrupt_context_resolver = new PainInterruptContextResolver();
+        public static DownedInterruptContextResolver down_interrupt_context_resolve = new DownedInterruptContextResolver();
+        public static Dictionary<string, float> ComposeImpactMap(Pawn pawn, PortraitInterrupt interrupt, bool is_interrupt_active, out bool is_value_fetched)
         {
             Dictionary<string, float> impact_map = new Dictionary<string, float>();
-            // TODO:数が多くなってきたら監視のインターバルを作るかも、コストと相談
+            // TODO:数が多くなってきたらスレッド化して監視のインターバルを作るかも
 
             if (interrupt.enabled_monitors[(int)MonitorType.PainIncrease])
             {
-                pain_interrupt_context_resolver.TryResolveInterruptContext(pawn, impact_map);
+                // 割り込み可能、不可能どちらでも計算だけはしておく
+                // もし割り込み不可の時で返信した際はスキップされる
+                pain_interrupt_context_resolver.TryResolveInterruptContext(pawn, interrupt, impact_map);
             }
 
-            if (interrupt.enabled_monitors[(int)MonitorType.Downed])
+            if (interrupt.enabled_monitors[(int)MonitorType.Downed] && !is_interrupt_active)
             {
-                AppendDownedContext(pawn, impact_map);
+                // ダウン判定は割り込み可能時のみ計算する
+                down_interrupt_context_resolve.TryResolveInterruptContext(pawn, interrupt, impact_map);
             }
 
             if (impact_map.Count > 0)
@@ -42,18 +41,5 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         // 以降特に値の保持による監視をする必要ない場合はここにメソッドを書いていく
         // 特定の値が必要ならInterrupt配下にクラスを作って
-
-        // ダウン中
-        public static void AppendDownedContext(Pawn pawn, Dictionary<string, float> impact_map)
-        {
-            //Log.Message($"[PortraitsEx] AppendDownedContext1 ==> downed?");
-            bool downed = pawn?.health?.Downed ?? false;
-
-            //Log.Message($"[PortraitsEx] AppendDownedContext2 ==> downed? {downed}");
-            if (downed)
-            {
-                impact_map[PortraitContextKeys.DOWNED] = 1.0f;
-            }
-        }
     }
 }

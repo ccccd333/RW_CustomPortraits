@@ -134,7 +134,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         if (refs.interrupt.interrupt_enabled)
                         {
                             // 割り込み計算。あまり大きくなるようなら別スレッド。
-                            intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, out intr_is_value_fetched);
+                            intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
                         }
 
                         if (!is_interrupt_active && intr_is_value_fetched)

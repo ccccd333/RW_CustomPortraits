@@ -10,9 +10,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
     {
         // Interrupt contexts
         public const string PAIN_INCREASE = "PainIncrease";
-        // Downed contexts
         public const string DOWNED = "Downed";
+        
         // Steady contexts
         public const string COMBAT_CONTEXT = "CombatContext";
+        public const string STEADY_DOWNED = "SteadyDowned";
     }
 }
