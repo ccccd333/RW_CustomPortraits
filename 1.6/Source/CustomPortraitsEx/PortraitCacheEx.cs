@@ -527,6 +527,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             }
                         }
                     }
+                    else if(Refs_key == "monitor_behaviors")
+                    {
+                        interr.monitor_behaviors.LoadFromJson(intrrvalue);
+                    }
                     else if (Refs_key == "group")
                     {
                         foreach (var iv in intrrvalue)
@@ -586,7 +590,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                     throw new Exception("The preset JSON definition is incorrect." + preset_name);
                                 }
                             }
-                            
+
                             if (interr.priority_weights.ContainsKey(iRefs_key))
                             {
                                 Log.Message($"[PortraitsEx] Duplicate priority weights detected. ==> Target preset: {preset_name} Duplicate Key: {iRefs_key}");

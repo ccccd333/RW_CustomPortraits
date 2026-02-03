@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="Comp_PawnCustomPortrait.cs" />
     <Compile Include="CustomPortraitsEx\ConditionDrivenPortrait.cs" />
+    <Compile Include="CustomPortraitsEx\Interrupt\DownedInterruptContextResolver.cs" />
     <Compile Include="CustomPortraitsEx\Interrupt\PainInterruptContextResolver.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\CustomPortraitJsonWriter.cs" />
     <Compile Include="CustomPortraitsEx\JsonEditorWindow\JsonEditorWindow.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="CustomPortraitsEx\Repository\Group.cs" />
     <Compile Include="CustomPortraitsEx\Repository\InteractionFilter.cs" />
     <Compile Include="CustomPortraitsEx\Repository\InteractionSelectionMap.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\MonitorBehaviors.cs" />
     <Compile Include="CustomPortraitsEx\Repository\PortraitInterrupt.cs" />
     <Compile Include="CustomPortraitsEx\Repository\PawnCacheEntry.cs" />
     <Compile Include="CustomPortraitsEx\Repository\PriorityWeights.cs" />
