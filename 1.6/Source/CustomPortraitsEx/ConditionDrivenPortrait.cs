@@ -219,27 +219,37 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 }
                             }
 
-                            // ポーンが生きていて、割り込み処理(ダメージ受けた系)ではない場合は
-                            // こちらでJson内容とゲームパラメータで突き合わせる
-                            bool is_resolved = false;
-                            bool is_value_fetched = false;
-                            Dictionary<string, float> impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out is_value_fetched);
-
-                            if (!is_value_fetched)
+                            
+                            if (!is_interrupt_active)
                             {
-                                // 途中で処理を抜けた(心情取れないとか)の場合、デフォルトの画像キャッシュを返却
-                                // ただ、ゲーム内のものなので本来ないはず
-                                Reset();
-                                return def;
+                                // ポーンが生きていて、割り込み処理(ダメージ受けた系)ではない場合は
+                                // こちらでJson内容とゲームパラメータで突き合わせる
+                                bool is_resolved = false;
+                                bool is_value_fetched = false;
+                                Dictionary<string, float> impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out is_value_fetched);
+
+                                if (!is_value_fetched)
+                                {
+                                    // 途中で処理を抜けた(心情取れないとか)の場合、デフォルトの画像キャッシュを返却
+                                    // ただ、ゲーム内のものなので本来ないはず
+                                    Reset();
+                                    return def;
+                                }
+
+                                portrait_context_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
+                                if (!is_resolved)
+                                {
+                                    // こちらはそもそも突き合わせたけど何もないやつ
+                                    // ないはず。一応監視。
+                                    Log.Error("[PortraitsEx] ResolveSteadyPortraitContextName ===> no result.");
+                                    return def;
+                                }
                             }
-
-                            portrait_context_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
-                            if (!is_resolved)
+                            else
                             {
-                                // こちらはそもそも突き合わせたけど何もないやつ
-                                // ないはず。一応監視。
-                                Log.Error("[PortraitsEx] ResolveSteadyPortraitContextName ===> no result.");
-                                return def;
+                                // 割り込みが起きた際は割り込み→平常→割り込みと1フレームで切り替わる可能性があるので
+                                // 一旦portrait_context_nameにtemp_refs_keyを入れる。
+                                portrait_context_name = temp_refs_key;
                             }
                             // 完全に平常運転になったので割り込みフラグをfalseにする
                             is_interrupt_active = false;
