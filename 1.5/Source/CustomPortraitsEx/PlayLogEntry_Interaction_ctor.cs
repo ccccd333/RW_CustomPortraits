@@ -70,10 +70,15 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                 Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} initiator {initiator.Name.ToStringFull} recipient {recipient.Name.ToStringFull}");
                 
+                //var sw = Stopwatch.StartNew();
                 if (!(initiator.HasPortraitName(null) || initiator.HasPortraitName(PortraitPosition.Inspector)) && 
                     !(recipient.HasPortraitName(null) || recipient.HasPortraitName(PortraitPosition.Inspector)))
                 {
                     // ポートレート切替機能を利用していないポーン同士の会話などははじく
+
+                    // 最初は2368 ticksその後は12 ticks程度
+                    //sw.Stop();
+
                     return true;
                 }
 
@@ -86,10 +91,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     var filter = intef.Value;
                     if (!filter.is_recipient && !filter.is_initiator) continue;
                     //Log.Message($"[PortraitsEx] intef.Key {intef.Key}");
-                    if (ismap.intf_regex_cache.ContainsKey(intef.Key))
+                    if (ismap.intf_regex_cache != null && ismap.intf_regex_cache.TryGetValue(intef.Key, out var matcher))
                     {
-                        var reg = ismap.intf_regex_cache[intef.Key];
-                        if (reg.IsMatch(intDef.LabelCap))
+                        if (matcher.IsMatch(intDef.LabelCap))
                         {
                             //Log.Message($"[PortraitsEx] InteractionDef {intDef.LabelCap} intef.Key {intef.Key}");
                             PushDict(intDef.LabelCap, filter, initiator, recipient);
