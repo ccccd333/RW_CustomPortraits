@@ -296,7 +296,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     if (cont == "textures")
                     {
                         Log.Message($"[PortraitsEx] Texture Key ==> Target preset: {preset_name} ==> {Refs_key} ==> {cont}");
-                        var tx = Textures(preset_name, cont, prop_n.Value, r);
+                        var tx = Textures(preset_name, Refs_key, cont, prop_n.Value, r);
                         r.txs.Add(Refs_key, tx);
                         //if (Utility.IsRegexPattern(Refs_key))
                         //{
@@ -653,13 +653,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         }
 
 
-        private static Textures Textures(string preset_name, string k, JToken n, Refs r)
+        private static Textures Textures(string preset_name, string refs_key, string k, JToken n, Refs r)
         {
             //Log.Message($"[PortraitsEx] Textures ==> Target preset: {preset_name}");
 
             Textures tx = new Textures();
             try
             {
+                if(PresetErrorMap.TryGetValue(preset_name, out var list) && list.Count > 0)
+                {
+                    Log.Message($"[PortraitsEx] Textures ==> Target preset: {preset_name} has errors. Skip loading textures.");
+                    return tx;
+                }
+
                 foreach (var token in n)
                 {
                     var prop = (JProperty)token;
@@ -796,8 +802,27 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
             catch (Exception e)
             {
+                Log.Warning($"[PortraitsEx] Texture Load Error: DeleteTextureList ==>");
+
+                if (r.txs.Count > 0)
+                {
+                    foreach (var tex_pair in r.txs)
+                    {
+                        foreach (var tex in tex_pair.Value.txs)
+                        {
+                            if (tex != null)
+                            {
+                                UnityEngine.Object.Destroy(tex);
+                            }
+                        }
+                        Log.Message($"DeleteTexture ==>{tex_pair.Key} {tex_pair.Value.file_base_path}: {tex_pair.Value.file_path_first} ~ {tex_pair.Value.file_path_second}");
+                    }
+
+                    r.txs.Clear();
+                }
+
                 // 既にロード済みのテクスチャを解放
-                if (tx != null && tx.txs != null)
+                if (tx.txs.Count > 0)
                 {
                     foreach (var tex in tx.txs)
                     {
@@ -806,6 +831,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             UnityEngine.Object.Destroy(tex);
                         }
                     }
+
+                    Log.Message($"DeleteTexture ==>{refs_key} {tx.file_base_path}: {tx.file_path_first} ~ {tx.file_path_second}");
 
                     tx.txs.Clear();
                 }
