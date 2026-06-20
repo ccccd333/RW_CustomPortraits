@@ -1,4 +1,5 @@
 
+using CustomPortraits;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository.PatternMatching;
 using HarmonyLib;
@@ -46,28 +47,28 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         }
 
         private static System.Collections.Concurrent.ConcurrentQueue<AsyncRequest> requestQueue = new System.Collections.Concurrent.ConcurrentQueue<AsyncRequest>();
-        private static AutoResetEvent threadEvent = new AutoResetEvent(false);
-        private static Thread workerThread;
-        private static volatile string pendingContextResult = null;
-        private static volatile bool isCalculating = false;
-        private static volatile string currentCalculatingPreset = null;
+        private static AutoResetEvent thread_event = new AutoResetEvent(false);
+        private static Thread worker_thread;
+        private static volatile string pending_context_result = null;
+        private static volatile bool is_calculating = false;
+        private static volatile string current_calculating_preset = null;
 
         static ConditionDrivenPortrait()
         {
-            workerThread = new Thread(WorkerLoop);
-            workerThread.IsBackground = true;
-            workerThread.Name = "CustomPortraitsAsyncWorker";
-            workerThread.Start();
+            worker_thread = new Thread(WorkerLoop);
+            worker_thread.IsBackground = true;
+            worker_thread.Name = "CustomPortraitsAsyncWorker";
+            worker_thread.Start();
         }
 
         private static void WorkerLoop()
         {
             while (true)
             {
-                threadEvent.WaitOne();
+                thread_event.WaitOne();
                 while (requestQueue.TryDequeue(out AsyncRequest req))
                 {
-                    if (req.preset_name != currentCalculatingPreset) continue;
+                    if (req.preset_name != current_calculating_preset) continue;
 
                     try
                     {
@@ -108,18 +109,24 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             }
                         }
 
-                        pendingContextResult = portrait_context_name;
+                        pending_context_result = portrait_context_name;
                     }
                     catch (Exception ex)
                     {
+                        // [DEBUG] エラー時ログ
+                        // System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "thread_debug.log"), $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Exception: {ex}\n");
+                        
                         Log.Error($"[PortraitsEx] Async Worker Exception: {ex}");
-                        pendingContextResult = "def";
+                        pending_context_result = "def";
                     }
                     finally
                     {
-                        isCalculating = false;
+                        is_calculating = false;
                     }
                 }
+
+                // [DEBUG] キューの処理をすべて終えてスリープ（待機状態）に入る直前のログ
+                // System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "thread_debug.log"), $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Thread Finished Processing Queue and goes to sleep.\n");
             }
         }
 
@@ -127,9 +134,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         {
             // ゲームロード開始時などに入ってくる
             while (requestQueue.TryDequeue(out _)) { }
-            isCalculating = false;
-            currentCalculatingPreset = null;
-            pendingContextResult = null;
+            is_calculating = false;
+            current_calculating_preset = null;
+            pending_context_result = null;
 
             //temp.Clear();
             temp_index = 0;
@@ -150,24 +157,24 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         public static Texture2D GetPortraitTexture(Pawn pawn, string filename, Texture2D def)
         {
-            //Log.Message($"[PortraitsEx] Try Visible Portrait: {filename}");
+            //Log.Message($"[PortraitsEx] Try Visible Portrait: test 1");
             if (filename != null && filename != "" && PortraitCacheEx.IsAvailable)
             {
                 string preset_name = "";
                 string d = "";
                 preset_name = Utility.Delimiter(filename, out d);
-
+                //Log.Message($"[PortraitsEx] Try Visible Portrait: test 2");
                 if (preset_name == "")
                 {
                     // たぶんないとは思うけど。
                     return def;
                 }
-
+                //Log.Message($"[PortraitsEx] Try Visible Portrait: test 3");
                 bool next_portrait = false;
                 int skip_count = 1;
                 // ゲーム内時間だとFPSに依存してしまうのでUnityの内部タイマーでフレーム計算する
                 float current_time = Time.realtimeSinceStartup;
-
+                //Log.Message($"[PortraitsEx] Try Visible Portrait: test 4");
                 if (current_time - last_update_time >= frame_interval_seconds)
                 {
                     // TODO:ここはアニメーション機能前提に組んでいるのでちょっと変だけど。その内直すかも
@@ -199,15 +206,20 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                 }
                 var mood_refs = PortraitCacheEx.Refs;
-
+                //Log.Message($"[PortraitsEx] Try Visible Portrait: test 5");
                 if (mood_refs.ContainsKey(preset_name) && !PortraitCacheEx.PresetErrorMap.ContainsKey(preset_name))
                 {
-
+                    //Log.Message($"[PortraitsEx] Try Visible Portrait: test 6");
 
                     if (temp_preset_name != preset_name)
                     {
-                        // ポートレートが別々のポーンの場合、退避情報をクリアして、後続処理をする。
-                        Reset();
+                        bool isHandlingAsync = (is_calculating || pending_context_result != null) && current_calculating_preset == preset_name;
+                        if (!isHandlingAsync)
+                        {
+                            //Log.Message($"[PortraitsEx] Try Visible Portrait: test 7 isHandlingAsync: {isHandlingAsync} isCalculating: {isCalculating} currentCalculatingPreset: {currentCalculatingPreset} temp_preset_name: {temp_preset_name} preset_name: {preset_name}");
+                            // ポートレートが別々のポーンの場合、退避情報をクリアして、後続処理をする。
+                            Reset();
+                        }
                     }
 
                     var refs = mood_refs[preset_name];
@@ -222,32 +234,27 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                     else
                     {
-                        if (temp_preset_name == preset_name)
+                        //if (Settings.Instance.debug)
+                        //{
+                        //    if (pendingContextResult != null)
+                        //        Log.Message($"[PortraitsEx] ConditionDrivenPortrait.GetPortraitTexture {pendingContextResult}");
+                        //}
+
+                        bool intr_is_value_fetched = false;
+                        Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
+                        if (refs.interrupt.interrupt_enabled)
                         {
-                            if (current_time - disp_last_update_time <= temp_display_duration)
-                            {
-                                if (next_portrait)
-                                {
-                                    return AdvanceToNextPortrait(def, skip_count);
-                                }
-                                else
-                                {
-                                    return GetCurrentPortrait(def);
-                                }
-                            }
-                            else
-                            {
-                                disp_last_update_time = Time.realtimeSinceStartup;
-                            }
+                            intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
                         }
 
-                        if (isCalculating && currentCalculatingPreset == preset_name)
+                        bool isHandlingAsync = (is_calculating || pending_context_result != null) && current_calculating_preset == preset_name;
+                        if (isHandlingAsync)
                         {
-                            if (pendingContextResult != null)
+                            if (pending_context_result != null)
                             {
-                                portrait_context_name = pendingContextResult;
-                                pendingContextResult = null;
-                                is_interrupt_active = false;
+                                portrait_context_name = pending_context_result;
+                                pending_context_result = null;
+                                disp_last_update_time = Time.realtimeSinceStartup;
                             }
                             else
                             {
@@ -256,44 +263,46 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         }
                         else
                         {
-                            bool intr_is_value_fetched = false;
-                            Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
-                            if (refs.interrupt.interrupt_enabled)
-                            {
-                                intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
-                            }
-
-                            bool steady_is_value_fetched = false;
-                            Dictionary<string, float> steady_impact_map = new Dictionary<string, float>();
-
                             if (!is_interrupt_active && intr_is_value_fetched)
                             {
                                 is_interrupt_active = true;
-                                disp_last_update_time = Time.realtimeSinceStartup;
-
-                                if (PortraitCacheEx.Settings.interrupt_fallback_to_steady)
-                                {
-                                    steady_impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out steady_is_value_fetched);
-                                }
                             }
                             else
                             {
-                                if (!is_interrupt_active)
+                                if (temp_preset_name == preset_name)
                                 {
-                                    steady_impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out steady_is_value_fetched);
+                                    if (current_time - disp_last_update_time <= temp_display_duration)
+                                    {
+                                        //if (Settings.Instance.debug)
+                                        //{
+                                        //    Log.Message($"[PortraitsEx] ConditionDrivenPortrait.GetPortraitTexture portrait_context_name: {portrait_context_name} current_time: {current_time} disp_last_update_time: {disp_last_update_time} temp_display_duration: {temp_display_duration}");
+                                        //}
+
+                                        return next_portrait ? AdvanceToNextPortrait(def, skip_count) : GetCurrentPortrait(def);
+                                    }
                                 }
-                                else
+
+                                if (is_interrupt_active)
                                 {
                                     portrait_context_name = temp_refs_key;
                                     is_interrupt_active = false;
+                                    disp_last_update_time = Time.realtimeSinceStartup;
                                 }
                             }
 
                             if (portrait_context_name == "")
                             {
-                                isCalculating = true;
-                                currentCalculatingPreset = preset_name;
-                                pendingContextResult = null;
+                                bool steady_is_value_fetched = false;
+                                Dictionary<string, float> steady_impact_map = new Dictionary<string, float>();
+
+                                if ((is_interrupt_active && PortraitCacheEx.Settings.interrupt_fallback_to_steady) || !is_interrupt_active)
+                                {
+                                    steady_impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out steady_is_value_fetched);
+                                }
+
+                                is_calculating = true;
+                                current_calculating_preset = preset_name;
+                                pending_context_result = null;
 
                                 requestQueue.Enqueue(new AsyncRequest
                                 {
@@ -305,7 +314,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                     steady_is_value_fetched = steady_is_value_fetched,
                                     steady_impact_map = steady_impact_map
                                 });
-                                threadEvent.Set();
+                                thread_event.Set();
 
                                 return next_portrait ? AdvanceToNextPortrait(def, skip_count) : GetCurrentPortrait(def);
                             }
