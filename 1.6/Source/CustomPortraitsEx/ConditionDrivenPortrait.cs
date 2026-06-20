@@ -1,4 +1,4 @@
-﻿
+
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository.PatternMatching;
 using HarmonyLib;
@@ -26,7 +26,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         private static string temp_preset_name = "";
         private static float temp_display_duration = 2.0f;
 
-
         private static float last_update_time = Time.realtimeSinceStartup;
         private static float frame_interval_seconds = 0.1f;
         private static bool portrait_skip_on_lag = true;
@@ -35,9 +34,102 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         private static bool is_interrupt_active = false;
 
+        private class AsyncRequest
+        {
+            public string preset_name;
+            public Refs refs;
+            public bool is_interrupt_active;
+            public bool intr_is_value_fetched;
+            public Dictionary<string, float> intr_impact_map;
+            public bool steady_is_value_fetched;
+            public Dictionary<string, float> steady_impact_map;
+        }
+
+        private static System.Collections.Concurrent.ConcurrentQueue<AsyncRequest> requestQueue = new System.Collections.Concurrent.ConcurrentQueue<AsyncRequest>();
+        private static AutoResetEvent threadEvent = new AutoResetEvent(false);
+        private static Thread workerThread;
+        private static volatile string pendingContextResult = null;
+        private static volatile bool isCalculating = false;
+        private static volatile string currentCalculatingPreset = null;
+
+        static ConditionDrivenPortrait()
+        {
+            workerThread = new Thread(WorkerLoop);
+            workerThread.IsBackground = true;
+            workerThread.Name = "CustomPortraitsAsyncWorker";
+            workerThread.Start();
+        }
+
+        private static void WorkerLoop()
+        {
+            while (true)
+            {
+                threadEvent.WaitOne();
+                while (requestQueue.TryDequeue(out AsyncRequest req))
+                {
+                    if (req.preset_name != currentCalculatingPreset) continue;
+
+                    try
+                    {
+                        string portrait_context_name = "";
+                        bool is_resolved = false;
+                        bool no_match = false;
+
+                        if (req.is_interrupt_active && req.intr_is_value_fetched)
+                        {
+                            portrait_context_name = ResolveInterruptPortraitContextName(null, req.refs, req.intr_impact_map, out is_resolved, out no_match);
+                            if (!is_resolved)
+                            {
+                                portrait_context_name = "def";
+                            }
+                            else if (no_match && PortraitCacheEx.Settings.interrupt_fallback_to_steady)
+                            {
+                                if (req.steady_is_value_fetched)
+                                {
+                                    portrait_context_name = ResolveSteadyPortraitContextName(null, req.refs, req.steady_impact_map, out is_resolved);
+                                    if (!is_resolved) portrait_context_name = "def";
+                                }
+                                else
+                                {
+                                    portrait_context_name = "def";
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (req.steady_is_value_fetched)
+                            {
+                                portrait_context_name = ResolveSteadyPortraitContextName(null, req.refs, req.steady_impact_map, out is_resolved);
+                                if (!is_resolved) portrait_context_name = "def";
+                            }
+                            else
+                            {
+                                portrait_context_name = "def";
+                            }
+                        }
+
+                        pendingContextResult = portrait_context_name;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"[PortraitsEx] Async Worker Exception: {ex}");
+                        pendingContextResult = "def";
+                    }
+                    finally
+                    {
+                        isCalculating = false;
+                    }
+                }
+            }
+        }
+
         public static void Reset()
         {
             // ゲームロード開始時などに入ってくる
+            while (requestQueue.TryDequeue(out _)) { }
+            isCalculating = false;
+            currentCalculatingPreset = null;
+            pendingContextResult = null;
 
             //temp.Clear();
             temp_index = 0;
@@ -130,131 +222,93 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     }
                     else
                     {
-
-                        bool intr_is_value_fetched = false;
-                        Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
-                        if (refs.interrupt.interrupt_enabled)
+                        if (temp_preset_name == preset_name)
                         {
-                            // 割り込み計算。あまり大きくなるようなら別スレッド。
-                            intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
-                        }
-
-                        if (!is_interrupt_active && intr_is_value_fetched)
-                        {
-                            // 割り込みが発生した場合、割り込みフラグをtrueにする。
-                            // 以降割り込みはtemp_display_durationまで、タイマー処理を通常運行側で処理させる。
-                            // そのためその間は割り込みは発生しない
-                            // temp_display_duration過ぎた後に平常運転になったら、再度割り込みフラグがfalseになる
-                            // なので割り込み→割り込みはなく、割り込み→平常運転→平常運転キャンセル割り込みとなる。
-                            // ダメージ系はスパンが短いものは違和感ないはず。
-                            // 割り込みのクールタイムを考えたがそれならtemp_display_durationに委ねたほうがユーザー側で操作しやすい
-                            is_interrupt_active = true;
-                            // 割り込み時点から計算するためtemp_display_durationを現在時刻で初期化
-                            disp_last_update_time = Time.realtimeSinceStartup;
-
-
-                            bool is_resolved = false;
-                            bool no_match = false;
-                            portrait_context_name = ResolveInterruptPortraitContextName(pawn, refs, intr_impact_map, out is_resolved, out no_match);
-                            if (!is_resolved)
+                            if (current_time - disp_last_update_time <= temp_display_duration)
                             {
-                                // 割り込み用のキーグループは書いてあるけど、空の場合とか
-                                // 本来の運用から外れている場合
-                                Log.Error("[PortraitsEx] ResolveInterruptPortraitContextName ===> no result.");
-                                return def;
-                            }
-
-                            if(no_match && PortraitCacheEx.Settings.interrupt_fallback_to_steady)
-                            {
-                                // ポーンが生きていて、割り込み処理(ダメージ受けた系)ではない場合は
-                                // こちらでJson内容とゲームパラメータで突き合わせる
-                                bool is_value_fetched = false;
-                                Dictionary<string, float> impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out is_value_fetched);
-
-                                if (!is_value_fetched)
+                                if (next_portrait)
                                 {
-                                    // 途中で処理を抜けた(心情取れないとか)の場合、デフォルトの画像キャッシュを返却
-                                    // ただ、ゲーム内のものなので本来ないはず
-                                    Reset();
-                                    return def;
-                                }
-
-                                portrait_context_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
-                                if (!is_resolved)
-                                {
-                                    // こちらはそもそも突き合わせたけど何もないやつ
-                                    // ないはず。一応監視。
-                                    Log.Error("[PortraitsEx][INTERRUPT FALLBACK] ResolveSteadyPortraitContextName ===> no result.");
-                                    return def;
-                                }
-
-                                //Log.Message($"[PortraitsEx][INTERRUPT FALLBACK] name ==> {portrait_context_name}");
-                            }
-
-                            //Log.Message($"[PortraitsEx] Interrupt ==> portrait_context_name {portrait_context_name}");
-                        }
-                        else
-                        {
-
-                            if (temp_preset_name == preset_name)
-                            {
-                                //Log.Message($"[PortraitsEx] disp_last_update_time ==> {disp_last_update_time} current_time ==> {current_time} temp_display_duration ==> {temp_display_duration}");
-
-                                // 毎回後続の重い処理を実行したくないのでjsonのdisplay_durationの間は退避した情報で
-                                // アニメーションor画像表示を行う。
-                                // temp_display_duration(jsonの時間定義)を超えたら次のやつを探しに後続処理をする
-                                if (current_time - disp_last_update_time <= temp_display_duration)
-                                {
-
-                                    if (next_portrait)
-                                    {
-                                        return AdvanceToNextPortrait(def, skip_count);
-                                    }
-                                    else
-                                    {
-                                        return GetCurrentPortrait(def);
-                                    }
+                                    return AdvanceToNextPortrait(def, skip_count);
                                 }
                                 else
                                 {
-                                    disp_last_update_time = Time.realtimeSinceStartup;
-                                }
-                            }
-
-                            
-                            if (!is_interrupt_active)
-                            {
-                                // ポーンが生きていて、割り込み処理(ダメージ受けた系)ではない場合は
-                                // こちらでJson内容とゲームパラメータで突き合わせる
-                                bool is_resolved = false;
-                                bool is_value_fetched = false;
-                                Dictionary<string, float> impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out is_value_fetched);
-
-                                if (!is_value_fetched)
-                                {
-                                    // 途中で処理を抜けた(心情取れないとか)の場合、デフォルトの画像キャッシュを返却
-                                    // ただ、ゲーム内のものなので本来ないはず
-                                    Reset();
-                                    return def;
-                                }
-
-                                portrait_context_name = ResolveSteadyPortraitContextName(pawn, refs, impact_map, out is_resolved);
-                                if (!is_resolved)
-                                {
-                                    // こちらはそもそも突き合わせたけど何もないやつ
-                                    // ないはず。一応監視。
-                                    Log.Error("[PortraitsEx] ResolveSteadyPortraitContextName ===> no result.");
-                                    return def;
+                                    return GetCurrentPortrait(def);
                                 }
                             }
                             else
                             {
-                                // 割り込みが起きた際は割り込み→平常→割り込みと1フレームで切り替わる可能性があるので
-                                // 一旦portrait_context_nameにtemp_refs_keyを入れる。
-                                portrait_context_name = temp_refs_key;
+                                disp_last_update_time = Time.realtimeSinceStartup;
                             }
-                            // 完全に平常運転になったので割り込みフラグをfalseにする
-                            is_interrupt_active = false;
+                        }
+
+                        if (isCalculating && currentCalculatingPreset == preset_name)
+                        {
+                            if (pendingContextResult != null)
+                            {
+                                portrait_context_name = pendingContextResult;
+                                pendingContextResult = null;
+                                is_interrupt_active = false;
+                            }
+                            else
+                            {
+                                return next_portrait ? AdvanceToNextPortrait(def, skip_count) : GetCurrentPortrait(def);
+                            }
+                        }
+                        else
+                        {
+                            bool intr_is_value_fetched = false;
+                            Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
+                            if (refs.interrupt.interrupt_enabled)
+                            {
+                                intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
+                            }
+
+                            bool steady_is_value_fetched = false;
+                            Dictionary<string, float> steady_impact_map = new Dictionary<string, float>();
+
+                            if (!is_interrupt_active && intr_is_value_fetched)
+                            {
+                                is_interrupt_active = true;
+                                disp_last_update_time = Time.realtimeSinceStartup;
+
+                                if (PortraitCacheEx.Settings.interrupt_fallback_to_steady)
+                                {
+                                    steady_impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out steady_is_value_fetched);
+                                }
+                            }
+                            else
+                            {
+                                if (!is_interrupt_active)
+                                {
+                                    steady_impact_map = PawnPortraitContext.ComposeImpactMap(pawn, out steady_is_value_fetched);
+                                }
+                                else
+                                {
+                                    portrait_context_name = temp_refs_key;
+                                    is_interrupt_active = false;
+                                }
+                            }
+
+                            if (portrait_context_name == "")
+                            {
+                                isCalculating = true;
+                                currentCalculatingPreset = preset_name;
+                                pendingContextResult = null;
+
+                                requestQueue.Enqueue(new AsyncRequest
+                                {
+                                    preset_name = preset_name,
+                                    refs = refs,
+                                    is_interrupt_active = is_interrupt_active,
+                                    intr_is_value_fetched = intr_is_value_fetched,
+                                    intr_impact_map = intr_impact_map,
+                                    steady_is_value_fetched = steady_is_value_fetched,
+                                    steady_impact_map = steady_impact_map
+                                });
+                                threadEvent.Set();
+
+                                return next_portrait ? AdvanceToNextPortrait(def, skip_count) : GetCurrentPortrait(def);
+                            }
                         }
                     }
                     return UpdatePortraitByContext(portrait_context_name, next_portrait, skip_count, def, refs, preset_name);
