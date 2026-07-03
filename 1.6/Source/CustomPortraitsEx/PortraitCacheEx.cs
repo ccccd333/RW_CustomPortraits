@@ -1,5 +1,6 @@
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository.PatternMatching;
+using Foxy.CustomPortraits.CustomPortraitsEx.Repository.VariantsHelperClass;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RimWorld;
@@ -28,6 +29,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         public static DirectoryInfo Directory { get; } = RimWorldRootDirectory.CreateSubdirectory("CustomPortraitsEx");
 
         public static DirectoryInfo PresetDirectory { get; } = Directory.CreateSubdirectory("Presets");
+        public static DirectoryInfo VariantsDirectory { get; } = Directory.CreateSubdirectory("Variants");
 
         public static PExSetting Settings = new PExSetting();
 
@@ -40,6 +42,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             Log.Message($"[PortraitsEx] Updating cache from directory: {Directory.FullName}");
             if (!Directory.Exists) Directory.Create();
             if (!PresetDirectory.Exists) PresetDirectory.Create();
+            if (!VariantsDirectory.Exists) VariantsDirectory.Create();
             try
             {
                 ReadDirectory(Directory);
@@ -108,6 +111,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 JObject root = JObject.Parse(File.ReadAllText(@files[0].FullName));
                 Refs r = new Refs();
+                string variants_json_name = "";
+                bool preset_loaded_successfully = true;
                 // TODO:ここもリファクタリング必要・・・
                 foreach (var token in root["conditions"])
                 {
@@ -153,13 +158,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         {
                             Interrupt(preset_name, key, value, r);
                         }
+                        else if (key == "variants")
+                        {
+                            variants_json_name = GetVariantsJsonName(value);
+                        }
                         else
                         {
+                            preset_loaded_successfully = false;
                             error_message.Add("The preset JSON definition is incorrect." + preset_name);
                         }
                     }
                     catch (Exception)
                     {
+                        preset_loaded_successfully = false;
                         //error_message.Add("The preset JSON definition is incorrect." + preset_name + " [wt?]: " + e.Message);
                     }
                 }
@@ -167,6 +178,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 if (!Refs.ContainsKey(preset_name))
                 {
                     Refs.Add(preset_name, r);
+                    if (preset_loaded_successfully && error_message.Count == 0 && !PresetErrorMap.ContainsKey(preset_name))
+                    {
+                        LoadVariantsJson(preset_name, variants_json_name, r);
+                    }
                 }
                 else
                 {
@@ -211,6 +226,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 JObject root = JObject.Parse(File.ReadAllText(@file.FullName));
                 string preset_name = root["preset_name"].ToString();
                 Refs r = new Refs();
+                string variants_json_name = "";
+                bool preset_loaded_successfully = true;
                 // TODO:やる気になったら、再読み込み時とjsonが読み取れない場合はテクスチャの削除をする
                 // メモリリークしたっていう人がいれば優先で対応
                 foreach (var token in root["conditions"])
@@ -257,13 +274,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         {
                             Interrupt(preset_name, key, value, r);
                         }
+                        else if (key == "variants")
+                        {
+                            variants_json_name = GetVariantsJsonName(value);
+                        }
                         else
                         {
+                            preset_loaded_successfully = false;
                             Log.Warning("The preset JSON definition is incorrect." + preset_name);
                         }
                     }
                     catch (Exception e)
                     {
+                        preset_loaded_successfully = false;
                         Log.Warning("The preset JSON definition is incorrect." + preset_name + " [wt?]: " + e.Message);
                     }
                 }
@@ -271,12 +294,187 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 if (!Refs.ContainsKey(preset_name))
                 {
                     Refs.Add(preset_name, r);
+                    if (preset_loaded_successfully && !PresetErrorMap.ContainsKey(preset_name))
+                    {
+                        LoadVariantsJson(preset_name, variants_json_name, r);
+                    }
                 }
                 else
                 {
                     Log.Warning($"[PortraitsEx] Duplicate preset name detected. ==> Target preset: {preset_name}");
                 }
             }
+        }
+
+        private static string GetVariantsJsonName(JToken value)
+        {
+            if (value is JValue variants_json_name)
+            {
+                return variants_json_name.Value<string>() ?? "";
+            }
+
+            return "";
+        }
+
+        private static void LoadVariantsJson(string preset_name, string variants_json_name, Refs r)
+        {
+            if (variants_json_name.NullOrEmpty())
+            {
+                return;
+            }
+
+            string file_name = Path.GetFileName(variants_json_name);
+            if (Path.GetExtension(file_name).NullOrEmpty())
+            {
+                file_name += ".json";
+            }
+
+            string variants_json_path = Path.Combine(VariantsDirectory.FullName, file_name);
+            if (!File.Exists(variants_json_path))
+            {
+                AddPresetLoadError(preset_name, $"Variants JSON file not found: {file_name}");
+                return;
+            }
+
+            try
+            {
+                JObject root = JObject.Parse(File.ReadAllText(variants_json_path));
+                JToken variants_root = root["variants"] ?? root;
+                LoadVariantsRoot(variants_root, r);
+                r.variants.is_enabled = true;
+                Log.Message($"[PortraitsEx] Variants loaded ==> Target preset: {preset_name} File: {file_name}");
+            }
+            catch (Exception e)
+            {
+                AddPresetLoadError(preset_name, $"An error occurred while loading variants JSON: {file_name} {e.Message}");
+            }
+        }
+
+        private static void LoadVariantsRoot(JToken variants_root, Refs r)
+        {
+            if (!(variants_root is JObject variants_object))
+            {
+                throw new Exception("Variants JSON root must be an object.");
+            }
+
+            List<string> valid_context_names = new List<string>(r.txs.Keys);
+            ValidationContext validation_context = new ValidationContext(valid_context_names);
+
+            foreach (var context_token in variants_object)
+            {
+                string context_name = context_token.Key;
+                if (!(context_token.Value is JObject repeat_object))
+                {
+                    throw new Exception($"Variants context must be an object: {context_name}");
+                }
+
+                foreach (var repeat_token in repeat_object)
+                {
+                    if (!int.TryParse(repeat_token.Key, out int repeat_index))
+                    {
+                        throw new Exception($"Variants repeat index must be an integer: {context_name}.{repeat_token.Key}");
+                    }
+
+                    VariantEvaluationGroup group = LoadVariantEvaluationGroup(repeat_token.Value, validation_context);
+                    r.variants.SetOperations(context_name, repeat_index, group);
+                }
+            }
+        }
+
+        private static VariantEvaluationGroup LoadVariantEvaluationGroup(JToken group_token, ValidationContext validation_context)
+        {
+            VariantEvaluationGroup group = new VariantEvaluationGroup();
+            JToken operations_token = group_token;
+
+            if (group_token is JObject group_object)
+            {
+                if (group_object.TryGetValue("repeat_range_min", out JToken repeat_range_min))
+                {
+                    group.repeat_range_min = repeat_range_min.Value<int>();
+                }
+
+                if (group_object.TryGetValue("repeat_range_max", out JToken repeat_range_max))
+                {
+                    group.repeat_range_max = repeat_range_max.Value<int>();
+                }
+
+                if (group_object.TryGetValue("repeat_range", out JToken repeat_range) && repeat_range is JArray range_array && range_array.Count >= 2)
+                {
+                    group.repeat_range_min = range_array[0].Value<int>();
+                    group.repeat_range_max = range_array[1].Value<int>();
+                }
+
+                if (group_object.TryGetValue("exception_contexts", out JToken exception_contexts) && exception_contexts is JArray exception_array)
+                {
+                    foreach (var exception_context in exception_array)
+                    {
+                        group.exception_contexts.Add(exception_context.ToString());
+                    }
+                }
+
+                if (group_object.TryGetValue("operations", out JToken operations))
+                {
+                    operations_token = operations;
+                }
+            }
+
+            if (!(operations_token is JArray operation_array))
+            {
+                throw new Exception("Variants operations must be an array.");
+            }
+
+            foreach (var operation_token in operation_array)
+            {
+                OperationBase operation = CreateVariantOperation(operation_token, validation_context);
+                group.operation_list.Add(operation);
+            }
+
+            return group;
+        }
+
+        private static OperationBase CreateVariantOperation(JToken operation_token, ValidationContext validation_context)
+        {
+            if (!(operation_token is JObject operation_object))
+            {
+                throw new Exception("Variant operation must be an object.");
+            }
+
+            Operation operation = new Operation();
+
+            string operation_type = operation_object.Value<string>("operation_type") ?? "";
+            if (!Enum.TryParse(operation_type, out operation.operation_type))
+            {
+                throw new Exception($"Unknown variants operation_type: {operation_type}");
+            }
+
+            string inequality_sign = operation_object.Value<string>("inequality_sign") ?? "def";
+            if (!Enum.TryParse(inequality_sign, out operation.inequality_sign))
+            {
+                operation.inequality_sign = InequalitySign.unk;
+            }
+
+            operation.operation_base_value = operation_object.Value<string>("operation_base_value") ?? operation_object.Value<string>("value") ?? "";
+            operation.override_portrait_name = operation_object.Value<string>("override_portrait_name") ?? operation_object.Value<string>("result_context_name") ?? "";
+
+            OperationBase result;
+            switch (operation.operation_type)
+            {
+                case OperationType.portrait_context_name:
+                    result = new PortraitContextName();
+                    break;
+                case OperationType.rand_value:
+                    result = new RandValue();
+                    break;
+                default:
+                    throw new Exception($"Unsupported variants operation_type: {operation.operation_type}");
+            }
+
+            if (!result.Init(operation, validation_context))
+            {
+                throw new Exception($"Failed to initialize variants operation: {operation.operation_type}");
+            }
+
+            return result;
         }
 
         private static void Refts(string preset_name, string k, JToken n, Refs r)

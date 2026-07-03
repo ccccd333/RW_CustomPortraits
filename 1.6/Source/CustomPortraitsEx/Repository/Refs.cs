@@ -13,6 +13,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
         public Dictionary<string, GroupPatternEntry> group_filter = new Dictionary<string, GroupPatternEntry>();
         public Dictionary<string, PriorityWeights> priority_weights = new Dictionary<string, PriorityWeights>();
         public PortraitInterrupt interrupt = new PortraitInterrupt();
+        public Variants variants = new Variants();
 
         public List<string> priority_weight_order = new List<string>();
         public string fallback_mood = "";
