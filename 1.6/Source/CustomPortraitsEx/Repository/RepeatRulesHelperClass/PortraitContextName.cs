@@ -1,6 +1,6 @@
-﻿using Verse;
+using Verse;
 
-namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.VariantsHelperClass
+namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperClass
 {
     public class PortraitContextName : OperationBase
     {

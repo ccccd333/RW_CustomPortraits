@@ -1,7 +1,7 @@
-﻿
+
 using System.Collections.Generic;
 
-namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.VariantsHelperClass
+namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperClass
 {
     public enum OperationType
     {

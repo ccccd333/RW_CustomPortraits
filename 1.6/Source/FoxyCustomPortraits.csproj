@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -88,7 +88,7 @@
     <Compile Include="CustomPortraitsEx\PlayLogEntry_Interaction_ctor.cs" />
     <Compile Include="CustomPortraitsEx\PortraitCacheEx.cs" />
     <Compile Include="CustomPortraitsEx\PortraitContextKeys.cs" />
-    <Compile Include="CustomPortraitsEx\Repository\Variants.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\RepeatRules.cs" />
     <Compile Include="CustomPortraitsEx\Repository\Group.cs" />
     <Compile Include="CustomPortraitsEx\Repository\GroupPatternEntry.cs" />
     <Compile Include="CustomPortraitsEx\Repository\InteractionFilter.cs" />
@@ -104,9 +104,9 @@
     <Compile Include="CustomPortraitsEx\Repository\PatternMatching\SimpleWildcardPattern.cs" />
     <Compile Include="CustomPortraitsEx\Repository\Sounds.cs" />
     <Compile Include="CustomPortraitsEx\Repository\Textures.cs" />
-    <Compile Include="CustomPortraitsEx\Repository\VariantsHelperClass\OperationBase.cs" />
-    <Compile Include="CustomPortraitsEx\Repository\VariantsHelperClass\PortraitContextName.cs" />
-    <Compile Include="CustomPortraitsEx\Repository\VariantsHelperClass\RandValue.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\OperationBase.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\PortraitContextName.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\RandValue.cs" />
     <Compile Include="CustomPortraitsEx\Utility.cs" />
     <Compile Include="DDS.cs" />
     <Compile Include="Dialog_AdvancedPortraitPawn.cs" />

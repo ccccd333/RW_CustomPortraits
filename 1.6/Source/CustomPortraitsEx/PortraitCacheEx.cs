@@ -1,6 +1,6 @@
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository.PatternMatching;
-using Foxy.CustomPortraits.CustomPortraitsEx.Repository.VariantsHelperClass;
+using Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperClass;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RimWorld;
@@ -29,7 +29,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         public static DirectoryInfo Directory { get; } = RimWorldRootDirectory.CreateSubdirectory("CustomPortraitsEx");
 
         public static DirectoryInfo PresetDirectory { get; } = Directory.CreateSubdirectory("Presets");
-        public static DirectoryInfo VariantsDirectory { get; } = Directory.CreateSubdirectory("Variants");
+        public static DirectoryInfo RepeatRulesDirectory { get; } = Directory.CreateSubdirectory("RepeatRules");
 
         public static PExSetting Settings = new PExSetting();
 
@@ -42,7 +42,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             Log.Message($"[PortraitsEx] Updating cache from directory: {Directory.FullName}");
             if (!Directory.Exists) Directory.Create();
             if (!PresetDirectory.Exists) PresetDirectory.Create();
-            if (!VariantsDirectory.Exists) VariantsDirectory.Create();
+            if (!RepeatRulesDirectory.Exists) RepeatRulesDirectory.Create();
             try
             {
                 ReadDirectory(Directory);
@@ -111,7 +111,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 JObject root = JObject.Parse(File.ReadAllText(@files[0].FullName));
                 Refs r = new Refs();
-                string variants_json_name = "";
+                string repeat_rules_json_name = "";
                 bool preset_loaded_successfully = true;
                 // TODO:ここもリファクタリング必要・・・
                 foreach (var token in root["conditions"])
@@ -158,9 +158,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         {
                             Interrupt(preset_name, key, value, r);
                         }
-                        else if (key == "variants")
+                        else if (key == "repeat_rules")
                         {
-                            variants_json_name = GetVariantsJsonName(value);
+                            repeat_rules_json_name = GetRepeatRulesJsonName(value);
                         }
                         else
                         {
@@ -180,7 +180,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     Refs.Add(preset_name, r);
                     if (preset_loaded_successfully && error_message.Count == 0 && !PresetErrorMap.ContainsKey(preset_name))
                     {
-                        LoadVariantsJson(preset_name, variants_json_name, r);
+                        LoadRepeatRulesJson(preset_name, repeat_rules_json_name, r);
                     }
                 }
                 else
@@ -226,7 +226,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 JObject root = JObject.Parse(File.ReadAllText(@file.FullName));
                 string preset_name = root["preset_name"].ToString();
                 Refs r = new Refs();
-                string variants_json_name = "";
+                string repeat_rules_json_name = "";
                 bool preset_loaded_successfully = true;
                 // TODO:やる気になったら、再読み込み時とjsonが読み取れない場合はテクスチャの削除をする
                 // メモリリークしたっていう人がいれば優先で対応
@@ -274,9 +274,9 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         {
                             Interrupt(preset_name, key, value, r);
                         }
-                        else if (key == "variants")
+                        else if (key == "repeat_rules")
                         {
-                            variants_json_name = GetVariantsJsonName(value);
+                            repeat_rules_json_name = GetRepeatRulesJsonName(value);
                         }
                         else
                         {
@@ -296,7 +296,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     Refs.Add(preset_name, r);
                     if (preset_loaded_successfully && !PresetErrorMap.ContainsKey(preset_name))
                     {
-                        LoadVariantsJson(preset_name, variants_json_name, r);
+                        LoadRepeatRulesJson(preset_name, repeat_rules_json_name, r);
                     }
                 }
                 else
@@ -306,109 +306,140 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
         }
 
-        private static string GetVariantsJsonName(JToken value)
+        private static string GetRepeatRulesJsonName(JToken value)
         {
-            if (value is JValue variants_json_name)
+            if (value is JValue repeat_rules_json_name)
             {
-                return variants_json_name.Value<string>() ?? "";
+                return repeat_rules_json_name.Value<string>() ?? "";
             }
 
             return "";
         }
 
-        private static void LoadVariantsJson(string preset_name, string variants_json_name, Refs r)
+        private static void LoadRepeatRulesJson(string preset_name, string repeat_rules_json_name, Refs r)
         {
-            if (variants_json_name.NullOrEmpty())
+            if (repeat_rules_json_name.NullOrEmpty())
             {
                 return;
             }
 
-            string file_name = Path.GetFileName(variants_json_name);
+            string file_name = Path.GetFileName(repeat_rules_json_name);
             if (Path.GetExtension(file_name).NullOrEmpty())
             {
                 file_name += ".json";
             }
 
-            string variants_json_path = Path.Combine(VariantsDirectory.FullName, file_name);
-            if (!File.Exists(variants_json_path))
+            string repeat_rules_json_path = Path.Combine(RepeatRulesDirectory.FullName, file_name);
+            if (!File.Exists(repeat_rules_json_path))
             {
-                AddPresetLoadError(preset_name, $"Variants JSON file not found: {file_name}");
+                AddPresetLoadError(preset_name, $"RepeatRules JSON file not found: {file_name}");
                 return;
             }
 
             try
             {
-                JObject root = JObject.Parse(File.ReadAllText(variants_json_path));
-                JToken variants_root = root["variants"] ?? root;
-                LoadVariantsRoot(variants_root, r);
-                r.variants.is_enabled = true;
-                Log.Message($"[PortraitsEx] Variants loaded ==> Target preset: {preset_name} File: {file_name}");
+                JObject root = JObject.Parse(File.ReadAllText(repeat_rules_json_path));
+                //JToken repeat_rules_root = root["repeat_rules"] ?? root;
+                LoadRepeatRulesRoot(root, r);
+                r.repeat_rules.is_enabled = true;
+                Log.Message($"[PortraitsEx] RepeatRules loaded ==> Target preset: {preset_name} File: {file_name}");
             }
             catch (Exception e)
             {
-                AddPresetLoadError(preset_name, $"An error occurred while loading variants JSON: {file_name} {e.Message}");
+                AddPresetLoadError(preset_name, $"An error occurred while loading repeat_rules JSON: {file_name} {e.Message}");
             }
         }
 
-        private static void LoadVariantsRoot(JToken variants_root, Refs r)
+        private static void LoadRepeatRulesRoot(JToken repeat_rules_root, Refs r)
         {
-            if (!(variants_root is JObject variants_object))
+            if (!(repeat_rules_root is JObject repeat_rules_object))
             {
-                throw new Exception("Variants JSON root must be an object.");
+                throw new Exception("RepeatRules JSON root must be an object.");
             }
 
             List<string> valid_context_names = new List<string>(r.txs.Keys);
             ValidationContext validation_context = new ValidationContext(valid_context_names);
 
-            foreach (var context_token in variants_object)
+            foreach (var context_token in repeat_rules_object)
             {
                 string context_name = context_token.Key;
                 if (!(context_token.Value is JObject repeat_object))
                 {
-                    throw new Exception($"Variants context must be an object: {context_name}");
+                    throw new Exception($"RepeatRules context must be an object: {context_name}");
                 }
 
-                foreach (var repeat_token in repeat_object)
+             
+                if (repeat_object.TryGetValue("loop", out JToken loop_token) && loop_token is JObject loop_object)
+                {
+                    RepeatLoopSettings repeat_loop_settings = new RepeatLoopSettings();
+
+                    if (loop_object.TryGetValue("min_count", out JToken min_count_token))
+                    {
+                        repeat_loop_settings.min_count = min_count_token.Value<int>();
+                    }
+
+                    if (loop_object.TryGetValue("max_count", out JToken max_count_token))
+                    {
+                        repeat_loop_settings.max_count = max_count_token.Value<int>();
+                    }
+
+                    if (loop_object.TryGetValue("interrupt_contexts", out JToken interrupt_contexts) && interrupt_contexts is JArray interrupt_array)
+                    {
+                        foreach (var interrupt_context in interrupt_array)
+                        {
+                            repeat_loop_settings.interrupt_contexts.Add(interrupt_context.ToString());
+                        }
+                    }
+
+                    r.repeat_rules.SetLoopSettings(context_name, repeat_loop_settings);
+                }
+
+                if (!repeat_object.TryGetValue("repeat_events", out JToken repeat_events_token) || !(repeat_events_token is JObject repeat_events_object))
+                {
+                    throw new Exception($"RepeatRules repeat_events must be an object: {context_name}");
+                }
+
+                foreach (var repeat_token in repeat_events_object)
                 {
                     if (!int.TryParse(repeat_token.Key, out int repeat_index))
                     {
-                        throw new Exception($"Variants repeat index must be an integer: {context_name}.{repeat_token.Key}");
+                        throw new Exception($"RepeatRules repeat index must be an integer: {context_name}.{repeat_token.Key}");
                     }
 
-                    VariantEvaluationGroup group = LoadVariantEvaluationGroup(repeat_token.Value, validation_context);
-                    r.variants.SetOperations(context_name, repeat_index, group);
+                    RepeatEvaluationGroup group = LoadRepeatEvaluationGroup(repeat_token.Value, validation_context);
+                    r.repeat_rules.SetOperations(context_name, repeat_index, group);
                 }
             }
         }
 
-        private static VariantEvaluationGroup LoadVariantEvaluationGroup(JToken group_token, ValidationContext validation_context)
+        private static RepeatEvaluationGroup LoadRepeatEvaluationGroup(JToken group_token, ValidationContext validation_context)
         {
-            VariantEvaluationGroup group = new VariantEvaluationGroup();
+            RepeatEvaluationGroup group = new RepeatEvaluationGroup();
             JToken operations_token = group_token;
 
             if (group_token is JObject group_object)
             {
-                if (group_object.TryGetValue("repeat_range_min", out JToken repeat_range_min))
-                {
-                    group.repeat_range_min = repeat_range_min.Value<int>();
-                }
+                //if (group_object.TryGetValue("repeat_range_min", out JToken repeat_range_min))
+                //{
+                //    group.repeat_range_min = repeat_range_min.Value<int>();
+                //}
 
-                if (group_object.TryGetValue("repeat_range_max", out JToken repeat_range_max))
-                {
-                    group.repeat_range_max = repeat_range_max.Value<int>();
-                }
+                //if (group_object.TryGetValue("repeat_range_max", out JToken repeat_range_max))
+                //{
+                //    group.repeat_range_max = repeat_range_max.Value<int>();
+                //}
 
-                if (group_object.TryGetValue("repeat_range", out JToken repeat_range) && repeat_range is JArray range_array && range_array.Count >= 2)
-                {
-                    group.repeat_range_min = range_array[0].Value<int>();
-                    group.repeat_range_max = range_array[1].Value<int>();
-                }
+                //if (group_object.TryGetValue("repeat_range", out JToken repeat_range) && repeat_range is JArray range_array && range_array.Count >= 2)
+                //{
+                //    group.repeat_range_min = range_array[0].Value<int>();
+                //    group.repeat_range_max = range_array[1].Value<int>();
+                //}
 
-                if (group_object.TryGetValue("exception_contexts", out JToken exception_contexts) && exception_contexts is JArray exception_array)
+                if (group_object.TryGetValue("interrupt_contexts", out JToken interrupt_contexts) && interrupt_contexts is JArray interrupt_array)
                 {
-                    foreach (var exception_context in exception_array)
+                    foreach (var interrupt_context in interrupt_array)
                     {
-                        group.exception_contexts.Add(exception_context.ToString());
+                        group.interrupt_contexts.Add(interrupt_context.ToString());
                     }
                 }
 
@@ -420,19 +451,19 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
             if (!(operations_token is JArray operation_array))
             {
-                throw new Exception("Variants operations must be an array.");
+                throw new Exception("RepeatRules operations must be an array.");
             }
 
             foreach (var operation_token in operation_array)
             {
-                OperationBase operation = CreateVariantOperation(operation_token, validation_context);
+                OperationBase operation = CreateRepeatRulesOperation(operation_token, validation_context);
                 group.operation_list.Add(operation);
             }
 
             return group;
         }
 
-        private static OperationBase CreateVariantOperation(JToken operation_token, ValidationContext validation_context)
+        private static OperationBase CreateRepeatRulesOperation(JToken operation_token, ValidationContext validation_context)
         {
             if (!(operation_token is JObject operation_object))
             {
@@ -444,7 +475,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             string operation_type = operation_object.Value<string>("operation_type") ?? "";
             if (!Enum.TryParse(operation_type, out operation.operation_type))
             {
-                throw new Exception($"Unknown variants operation_type: {operation_type}");
+                throw new Exception($"Unknown repeat_rules operation_type: {operation_type}");
             }
 
             string inequality_sign = operation_object.Value<string>("inequality_sign") ?? "def";
@@ -466,12 +497,12 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     result = new RandValue();
                     break;
                 default:
-                    throw new Exception($"Unsupported variants operation_type: {operation.operation_type}");
+                    throw new Exception($"Unsupported repeat_rules operation_type: {operation.operation_type}");
             }
 
             if (!result.Init(operation, validation_context))
             {
-                throw new Exception($"Failed to initialize variants operation: {operation.operation_type}");
+                throw new Exception($"Failed to initialize repeat_rules operation: {operation.operation_type}");
             }
 
             return result;

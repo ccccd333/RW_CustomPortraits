@@ -2,6 +2,7 @@
 using CustomPortraits;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository;
 using Foxy.CustomPortraits.CustomPortraitsEx.Repository.PatternMatching;
+using Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperClass;
 using HarmonyLib;
 using Newtonsoft.Json.Linq;
 using RimWorld;
@@ -20,6 +21,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
     public static class ConditionDrivenPortrait
     {
+        private static int repeat_count = 0;
         private static List<Texture2D> temp = new List<Texture2D>();
         private static int temp_index = 0;
         private static string temp_refs_key = "";
@@ -46,12 +48,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             public Dictionary<string, float> steady_impact_map;
         }
 
-        private static System.Collections.Concurrent.ConcurrentQueue<AsyncRequest> requestQueue = new System.Collections.Concurrent.ConcurrentQueue<AsyncRequest>();
+        private static System.Collections.Concurrent.ConcurrentQueue<AsyncRequest> request_queue = new System.Collections.Concurrent.ConcurrentQueue<AsyncRequest>();
         private static AutoResetEvent thread_event = new AutoResetEvent(false);
         private static Thread worker_thread;
         private static volatile string pending_context_result = null;
         private static volatile bool is_calculating = false;
         private static volatile string current_calculating_preset = null;
+        private static volatile string repeat_base_context = null;
 
         static ConditionDrivenPortrait()
         {
@@ -66,7 +69,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             while (true)
             {
                 thread_event.WaitOne();
-                while (requestQueue.TryDequeue(out AsyncRequest req))
+                while (request_queue.TryDequeue(out AsyncRequest req))
                 {
                     if (req.preset_name != current_calculating_preset) continue;
 
@@ -75,10 +78,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         string portrait_context_name = "";
                         bool is_resolved = false;
                         bool no_match = false;
+                        List<string> candidate_context_names = new List<string>();
+                        bool is_repeat = false;
+
 
                         if (req.is_interrupt_active && req.intr_is_value_fetched)
                         {
-                            portrait_context_name = ResolveInterruptPortraitContextName(null, req.refs, req.intr_impact_map, out is_resolved, out no_match);
+                            portrait_context_name = ResolveInterruptPortraitContextName(null, req.refs, req.intr_impact_map, out is_resolved, out no_match, candidate_context_names);
                             if (!is_resolved)
                             {
                                 portrait_context_name = "def";
@@ -87,7 +93,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             {
                                 if (req.steady_is_value_fetched)
                                 {
-                                    portrait_context_name = ResolveSteadyPortraitContextName(null, req.refs, req.steady_impact_map, out is_resolved);
+                                    portrait_context_name = ResolveSteadyPortraitContextName(null, req.refs, req.steady_impact_map, out is_resolved, candidate_context_names);
                                     if (!is_resolved) portrait_context_name = "def";
                                 }
                                 else
@@ -100,7 +106,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         {
                             if (req.steady_is_value_fetched)
                             {
-                                portrait_context_name = ResolveSteadyPortraitContextName(null, req.refs, req.steady_impact_map, out is_resolved);
+                                portrait_context_name = ResolveSteadyPortraitContextName(null, req.refs, req.steady_impact_map, out is_resolved, candidate_context_names);
                                 if (!is_resolved) portrait_context_name = "def";
                             }
                             else
@@ -109,13 +115,86 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             }
                         }
 
-                        pending_context_result = portrait_context_name;
+                        // repeat_rulesの事前評価(主にリピート)
+                        if (req.refs.repeat_rules.is_enabled)
+                        {
+                            if (repeat_base_context != null)
+                            {
+                                int repeat_index = repeat_count;
+                                int loop_result = req.refs.repeat_rules.TryApplyLoopRepeatEvent(
+                                    repeat_base_context,
+                                    portrait_context_name,
+                                    repeat_index,
+                                    candidate_context_names,
+                                    out var loop_resolved_context_name);
+
+                                if (loop_result == 1)
+                                {
+                                    pending_context_result = loop_resolved_context_name;
+                                    is_repeat = true;
+                                    ++repeat_count;
+                                }
+                                else if (loop_result == -1)
+                                {
+                                    repeat_count = 0;
+                                }
+                            }
+                        }
+
+                        // repeat_rulesの事後評価
+                        if (!is_repeat && is_resolved && req.refs.repeat_rules.is_enabled)
+                        {
+                            // そもそもis_resolvedがtrueじゃないとjsonのコンテキスト名と一致してないので、repeat_rulesの事後評価はしない
+                            // defで変えるパターンを今のところ見たことないけど
+
+                            bool is_same_context = (repeat_base_context != null && portrait_context_name == repeat_base_context);
+                            if (!is_same_context)
+                            {
+                                repeat_count = 0;
+                            }
+
+                            int repeat_index = repeat_count;
+                            if (req.refs.repeat_rules.TryResolveVariantContext(
+                                portrait_context_name,
+                                repeat_index,
+                                candidate_context_names,
+                                repeat_base_context,
+                                out var resolved_context_name,
+                                out var should_increment_repeat))
+                            {
+                                if (is_same_context)
+                                {
+                                    repeat_count++;
+                                }
+                                else
+                                {
+                                    repeat_count = 1;
+                                    repeat_base_context = portrait_context_name;
+                                }
+
+                                portrait_context_name = resolved_context_name;
+                            }
+                            else
+                            {
+                                if (!is_same_context)
+                                {
+                                    repeat_count = 1;
+                                    repeat_base_context = portrait_context_name;
+                                }
+                                else
+                                {
+                                    repeat_count++;
+                                }
+                            }
+
+                            pending_context_result = portrait_context_name;
+                        }
                     }
                     catch (Exception ex)
                     {
                         // [DEBUG] エラー時ログ
                         // System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "thread_debug.log"), $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Exception: {ex}\n");
-                        
+
                         Log.Error($"[PortraitsEx] Async Worker Exception: {ex}");
                         pending_context_result = "def";
                     }
@@ -133,10 +212,12 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         public static void Reset()
         {
             // ゲームロード開始時などに入ってくる
-            while (requestQueue.TryDequeue(out _)) { }
+            while (request_queue.TryDequeue(out _)) { }
             is_calculating = false;
             current_calculating_preset = null;
             pending_context_result = null;
+            repeat_base_context = null;
+            repeat_count = 0;
 
             //temp.Clear();
             temp_index = 0;
@@ -304,7 +385,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 current_calculating_preset = preset_name;
                                 pending_context_result = null;
 
-                                requestQueue.Enqueue(new AsyncRequest
+                                request_queue.Enqueue(new AsyncRequest
                                 {
                                     preset_name = preset_name,
                                     refs = refs,
@@ -329,7 +410,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             return def;
         }
 
-        private static string ResolveSteadyPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved)
+        private static string ResolveSteadyPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved, List<string> candidate_context_names)
         {
             string portrait_context_name = "";
             //Dictionary<string, float> impact_map;
@@ -380,6 +461,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             //    }
             //}
 
+            foreach (var elm in matched_priority_weights)
+            {
+                foreach (var kvp in elm)
+                {
+                    candidate_context_names.Add(kvp.Value.filter_name);
+                }
+            }
 
             // matched_priority_weightsの始まりから順に優先となっているので、
             // weightとランダム結果を比べて、weight以下だったらその名前を後続へ。
@@ -424,7 +512,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             return portrait_context_name;
         }
 
-        private static string ResolveInterruptPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved, out bool no_match)
+        private static string ResolveInterruptPortraitContextName(Pawn pawn, Refs refs, Dictionary<string, float> impact_map, out bool is_resolved, out bool no_match, List<string> candidate_context_names)
         {
             string portrait_context_name = "";
             //Dictionary<string, float> impact_map;
@@ -471,6 +559,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             //    }
             //}
 
+            foreach (var elm in matched_priority_weights)
+            {
+                foreach (var kvp in elm)
+                {
+                    candidate_context_names.Add(kvp.Value.filter_name);
+                }
+            }
 
             // matched_priority_weightsの始まりから順に優先となっているので、
             // weightとランダム結果を比べて、weight以下だったらその名前を後続へ。
@@ -684,7 +779,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 }
                 else
                 {
-                    if (impact_map.ContainsKey(kvp.Key)) 
+                    if (impact_map.ContainsKey(kvp.Key))
                     {
                         filtered_group_filter[kvp.Value.key] = kvp.Value.key;
                         is_matched = true;
@@ -756,7 +851,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             dict.Add(kp, vp);
                         }
                     }
-                        
+
                     //    match_found = true;
 
                     //if (match_found)
