@@ -61,6 +61,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="UnityEngine.VideoModule">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Comp_PawnCustomPortrait.cs" />
@@ -107,6 +110,9 @@
     <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\OperationBase.cs" />
     <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\PortraitContextName.cs" />
     <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\RandValue.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\VideoEntry.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\VideoPlayerManager.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\VideoPortraitDrawer.cs" />
     <Compile Include="CustomPortraitsEx\Utility.cs" />
     <Compile Include="DDS.cs" />
     <Compile Include="Dialog_AdvancedPortraitPawn.cs" />

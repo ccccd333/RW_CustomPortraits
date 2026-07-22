@@ -29,6 +29,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         private static string temp_preset_name = "";
         private static float temp_display_duration = 2.0f;
 
+        // ---- ビデオ再生用 -----------------------------------------------
+        /// <summary>現在ビデオを再生中かどうか。</summary>
+        private static bool temp_is_video = false;
+        /// <summary>現在再生中のビデオがループかどうか（false = 1回再生後に次へ）。</summary>
+        private static bool temp_video_loop = true;
+        // ----------------------------------------------------------------
+
         private static float last_update_time = Time.realtimeSinceStartup;
         private static float frame_interval_seconds = 0.1f;
         private static bool portrait_skip_on_lag = true;
@@ -81,7 +88,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         List<string> candidate_context_names = new List<string>();
                         bool is_repeat = false;
 
-
+                        //Log.Message($"[PortraitsEx] Async Worker Processing: preset_name {req.preset_name} is_interrupt_active {req.is_interrupt_active} intr_is_value_fetched {req.intr_is_value_fetched} steady_is_value_fetched {req.steady_is_value_fetched}");
                         if (req.is_interrupt_active && req.intr_is_value_fetched)
                         {
                             portrait_context_name = ResolveInterruptPortraitContextName(null, req.refs, req.intr_impact_map, out is_resolved, out no_match, candidate_context_names);
@@ -101,6 +108,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                     portrait_context_name = "def";
                                 }
                             }
+                            //Log.Message($"[PortraitsEx] Async Worker Result: preset_name {req.preset_name} portrait_context_name {portrait_context_name} is_resolved {is_resolved} no_match {no_match}");
                         }
                         else
                         {
@@ -113,11 +121,14 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             {
                                 portrait_context_name = "def";
                             }
+
+                            //Log.Message($"[PortraitsEx] Async Worker Result: preset_name {req.preset_name} portrait_context_name {portrait_context_name} is_resolved {is_resolved}");
                         }
 
                         // repeat_rulesの事前評価(主にリピート)
                         if (req.refs.repeat_rules.is_enabled)
                         {
+                            //Log.Message($"[PortraitsEx] Async Worker Repeat Rules: preset_name {req.preset_name} repeat_base_context {repeat_base_context} repeat_count {repeat_count}");
                             if (repeat_base_context != null)
                             {
                                 int repeat_index = repeat_count;
@@ -142,48 +153,52 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         }
 
                         // repeat_rulesの事後評価
-                        if (!is_repeat && is_resolved && req.refs.repeat_rules.is_enabled)
+                        if (!is_repeat)
                         {
-                            // そもそもis_resolvedがtrueじゃないとjsonのコンテキスト名と一致してないので、repeat_rulesの事後評価はしない
-                            // defで変えるパターンを今のところ見たことないけど
-
-                            bool is_same_context = (repeat_base_context != null && portrait_context_name == repeat_base_context);
-                            if (!is_same_context)
+                            if (is_resolved && req.refs.repeat_rules.is_enabled)
                             {
-                                repeat_count = 0;
-                            }
+                                //Log.Message($"[PortraitsEx] Async Worker Repeat Rules Post-Evaluation: preset_name {req.preset_name} repeat_base_context {repeat_base_context} repeat_count {repeat_count}");
+                                // そもそもis_resolvedがtrueじゃないとjsonのコンテキスト名と一致してないので、repeat_rulesの事後評価はしない
+                                // defで変えるパターンを今のところ見たことないけど
 
-                            int repeat_index = repeat_count;
-                            if (req.refs.repeat_rules.TryResolveVariantContext(
-                                portrait_context_name,
-                                repeat_index,
-                                candidate_context_names,
-                                repeat_base_context,
-                                out var resolved_context_name,
-                                out var should_increment_repeat))
-                            {
-                                if (is_same_context)
-                                {
-                                    repeat_count++;
-                                }
-                                else
-                                {
-                                    repeat_count = 1;
-                                    repeat_base_context = portrait_context_name;
-                                }
-
-                                portrait_context_name = resolved_context_name;
-                            }
-                            else
-                            {
+                                bool is_same_context = (repeat_base_context != null && portrait_context_name == repeat_base_context);
                                 if (!is_same_context)
                                 {
-                                    repeat_count = 1;
-                                    repeat_base_context = portrait_context_name;
+                                    repeat_count = 0;
+                                }
+
+                                int repeat_index = repeat_count;
+                                if (req.refs.repeat_rules.TryResolveVariantContext(
+                                    portrait_context_name,
+                                    repeat_index,
+                                    candidate_context_names,
+                                    repeat_base_context,
+                                    out var resolved_context_name,
+                                    out var should_increment_repeat))
+                                {
+                                    if (is_same_context)
+                                    {
+                                        repeat_count++;
+                                    }
+                                    else
+                                    {
+                                        repeat_count = 1;
+                                        repeat_base_context = portrait_context_name;
+                                    }
+
+                                    portrait_context_name = resolved_context_name;
                                 }
                                 else
                                 {
-                                    repeat_count++;
+                                    if (!is_same_context)
+                                    {
+                                        repeat_count = 1;
+                                        repeat_base_context = portrait_context_name;
+                                    }
+                                    else
+                                    {
+                                        repeat_count++;
+                                    }
                                 }
                             }
 
@@ -228,6 +243,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             last_update_time = Time.realtimeSinceStartup;
             disp_last_update_time = Time.realtimeSinceStartup;
             is_interrupt_active = false;
+
+            // ビデオ状態もリセット
+            temp_is_video = false;
+            temp_video_loop = true;
+            // インスタンスが既に存在する場合のみ Stop()。
+            // 未初期化状態で Instance にアクセスするとシーンロード中に new GameObject が走りクラッシュするため。
+            Repository.VideoPlayerManager.StopIfActive();
 
             // settings反映
             portrait_skip_on_lag = PortraitCacheEx.Settings.portrait_animation.portrait_skip_on_lag;
@@ -352,7 +374,22 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             {
                                 if (temp_preset_name == preset_name)
                                 {
-                                    if (current_time - disp_last_update_time <= temp_display_duration)
+                                    bool should_keep_showing = (current_time - disp_last_update_time <= temp_display_duration);
+
+                                    // 動画で「ループしない」場合は、時間によるdisplay_durationの判定を無視して終端まで再生を続ける
+                                    if (temp_is_video && !temp_video_loop)
+                                    {
+                                        if (Repository.VideoPlayerManager.Instance.IsVideoEnded)
+                                        {
+                                            should_keep_showing = false;
+                                        }
+                                        else
+                                        {
+                                            should_keep_showing = true;
+                                        }
+                                    }
+
+                                    if (should_keep_showing)
                                     {
                                         //if (Settings.Instance.debug)
                                         //{
@@ -615,69 +652,110 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         private static Texture2D UpdatePortraitByContext(string portrait_context_name, bool next_portrait, int skip_count, Texture2D def, Refs refs, string preset_name)
         {
+            //Log.Message($"[PortraitsEx] UpdatePortraitByContext: preset_name {preset_name} portrait_context_name {portrait_context_name} temp_refs_key {temp_refs_key} temp_is_video {temp_is_video} temp_video_loop {temp_video_loop}");
             if (portrait_context_name != temp_refs_key)
             {
                 // 心情+社交名と既に退避済みの心情+社交名が一致しないとき
                 Reset();
                 string access_key = "";
 
+                if (refs.MatchVideoKey(portrait_context_name, out access_key))
+                {
+                    //Log.Message($"[PortraitsEx] UpdatePortraitByContext: Switch to video {access_key} preset_name {preset_name}");
+                    return SwitchToVideoAndReturnFrame(refs.videos[access_key], preset_name, access_key, def);
+                }
+
                 if (refs.MatchDictKeysByRegex(portrait_context_name, out access_key))
                 {
+                    //Log.Message($"[PortraitsEx] UpdatePortraitByContext: Switch to texture {access_key} preset_name {preset_name}");
+                    // access_key に video もあれば video を優先（同一キーに両方ある場合）
+                    if (refs.videos.TryGetValue(access_key, out var ve))
+                        return SwitchToVideoAndReturnFrame(ve, preset_name, access_key, def);
+
                     return CacheTextureIfKeyMatches(def, refs, preset_name, access_key);
-
-                    //var txs = refs.txs;
-                    //var tt = txs[access_key];
-                    //temp = tt.txs;
-                    //temp_animation_mode = tt.IsAnimation;
-                    //temp_index = 0;
-                    //temp_preset_name = preset_name;
-                    //temp_refs_key = access_key;
-                    //temp_display_duration = tt.display_duration;
-                    ////Log.Message($"[PortraitsEx] preset_name {temp_preset_name} disp_d {temp_display_duration}");
-                    //if (temp.Count <= 0)
-                    //{
-                    //    return ImageLoadError(preset_name, def);
-                    //}
-                    //else
-                    //{
-                    //    if (temp.Count <= 0) return ImageLoadError(preset_name, def);
-
-                    //    Texture2D texture = temp[temp_index];
-                    //    if (temp_animation_mode) ++temp_index;
-
-                    //    if (texture == null)
-                    //    {
-                    //        Log.Error("[PortraitsEx] The image was successfully generated, but disappeared at the point when it was registered in the dictionary.");
-                    //        return ImageLoadError(preset_name, def);
-                    //    }
-                    //    return texture;
-                    //}
                 }
                 else
                 {
-                    if (refs.fallback_mood != "" && refs.MatchDictKeysByRegex(refs.fallback_mood, out access_key))
+                    //Log.Message($"[PortraitsEx] UpdatePortraitByContext: No match for {portrait_context_name} preset_name {preset_name}");
+                    if (refs.fallback_mood != "")
                     {
-                        return CacheTextureIfKeyMatches(def, refs, preset_name, access_key);
+                        if (refs.MatchVideoKey(refs.fallback_mood, out access_key))
+                        {
+                            //Log.Message($"[PortraitsEx] UpdatePortraitByContext: Switch to fallback video {access_key} preset_name {preset_name}");
+                            return SwitchToVideoAndReturnFrame(refs.videos[access_key], preset_name, access_key, def);
+                        }
+                        else if (refs.MatchDictKeysByRegex(refs.fallback_mood, out access_key))
+                        {
+                            //Log.Message($"[PortraitsEx] UpdatePortraitByContext: Switch to fallback texture {access_key} preset_name {preset_name}");
+                            if (refs.videos.TryGetValue(access_key, out var ve))
+                                return SwitchToVideoAndReturnFrame(ve, preset_name, access_key, def);
+
+                            return CacheTextureIfKeyMatches(def, refs, preset_name, access_key);
+                        }
+                        else
+                        {
+                            //Log.Message($"[PortraitsEx] UpdatePortraitByContext: No fallback match for {refs.fallback_mood} preset_name {preset_name}");
+                            return ImageLoadError(preset_name, def);
+                        }
                     }
                     else
                     {
+                        //Log.Message($"[PortraitsEx] UpdatePortraitByContext: No fallback_mood defined for preset_name {preset_name}");
                         return ImageLoadError(preset_name, def);
                     }
                 }
             }
             else
             {
+                // 同じコンテキスト継続中
+                if (temp_is_video)
+                {
+                    // ループなし動画が終端まで到達し、再評価の結果「同じコンテキスト」が選ばれた場合、最初から再生し直す
+                    if (!temp_video_loop && Repository.VideoPlayerManager.Instance.IsVideoEnded)
+                    {
+                        //Log.Message($"[PortraitsEx] UpdatePortraitByContext: Replaying same video {temp_refs_key} preset_name {preset_name}");
+                        return SwitchToVideoAndReturnFrame(refs.videos[temp_refs_key], preset_name, temp_refs_key, def);
+                    }
+
+                    // ビデオの現フレームテクスチャを RenderTexture から取り出す
+                    // RenderTexture は Texture2D と同じ Texture 基底クラスなので
+                    // GUI.DrawTexture に渡せるが、戻り値型を合わせるため def を返し
+                    // VideoPlayerManager.IsActive フラグを描画側で確認する方式を取る。
+                    // → PortraitDrawer / Patch 側で IsVideoActive を見て RenderTexture を描画。
+                    return null; // null を返すことで描画側にビデオモード通知
+                }
+
                 if (next_portrait)
                 {
-
                     return AdvanceToNextPortrait(def, skip_count);
                 }
                 else
                 {
-
                     return GetCurrentPortrait(def);
                 }
             }
+        }
+
+        /// <summary>
+        /// ビデオクリップへ切り替えて最初のフレームテクスチャを返す。
+        /// 戻り値は null（ビデオモード通知）。描画側は VideoPlayerManager.Instance.IsPlaying で判定。
+        /// </summary>
+        private static Texture2D SwitchToVideoAndReturnFrame(Repository.VideoEntry ve, string preset_name, string access_key, Texture2D def)
+        {
+            string abs_path = PortraitCacheEx.Directory.FullName + "/" + ve.file_path;
+            Repository.VideoPlayerManager.Instance.SwitchClip(abs_path, ve.loop, ve.fallback_texture);
+
+            temp_is_video         = true;
+            temp_video_loop       = ve.loop;
+            temp_refs_key         = access_key;
+            temp_preset_name      = preset_name;
+            temp_display_duration = ve.display_duration;
+            disp_last_update_time = Time.realtimeSinceStartup;
+
+            if (Settings.Instance.debug)
+                Log.Message($"[PortraitsEx] SwitchToVideo ==> key: {access_key} path: {abs_path} loop: {ve.loop}");
+
+            return null; // ビデオモード通知（描画側が VideoPlayerManager から RenderTexture を取得）
         }
 
         private static Texture2D CacheTextureIfKeyMatches(Texture2D def, Refs refs, string preset_name, string access_key)
@@ -716,6 +794,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         private static Texture2D AdvanceToNextPortrait(Texture2D def, int skip_count)
         {
+            if (temp_is_video) return null;
             if (temp.Count <= 0) return def;
             if (temp_index < temp.Count)
             {
@@ -732,6 +811,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         private static Texture2D GetCurrentPortrait(Texture2D def)
         {
+            if (temp_is_video) return null;
             if (temp.Count <= 0) return def;
             if (temp_animation_mode)
             {

@@ -85,6 +85,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         if (tex != null) UnityEngine.Object.Destroy(tex);
                     }
                 }
+                // videos は VideoEntry のみなので特別なリソース解放不要。
+                // VideoPlayerManager はグローバルシングルトンなので止めるだけ。
+                VideoPlayerManager.DestroyInstance();
+                oldRefs.videos.Clear();
                 Refs.Remove(preset_name);
             }
 
@@ -533,14 +537,112 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         Log.Message($"[PortraitsEx] Texture Key ==> Target preset: {preset_name} ==> {Refs_key} ==> {cont}");
                         var tx = Textures(preset_name, Refs_key, cont, prop_n.Value, r);
                         r.txs.Add(Refs_key, tx);
-                        //if (Utility.IsRegexPattern(Refs_key))
-                        //{
-                        //    r.txs_regex_cache.Add(Refs_key, new Regex(Refs_key, RegexOptions.Compiled | RegexOptions.IgnoreCase));
-                        //}
+                    }
+                    else if (cont == "video")
+                    {
+                        // mp4 動画エントリを読み込む。
+                        // textures と並存可能。同一キーに両方あれば video を優先する（ConditionDrivenPortrait 側で制御）。
+                        Log.Message($"[PortraitsEx] Video Key ==> Target preset: {preset_name} ==> {Refs_key} ==> {cont}");
+                        var ve = LoadVideoEntry(preset_name, Refs_key, prop_n.Value);
+                        if (ve != null && !r.videos.ContainsKey(Refs_key))
+                            r.videos.Add(Refs_key, ve);
                     }
 
                 }
 
+            }
+        }
+
+        /// <summary>
+        /// JSON の video エントリをパースして VideoEntry を返す。
+        /// ファイルが見つからない場合は null を返す。
+        /// </summary>
+        private static VideoEntry LoadVideoEntry(string preset_name, string refs_key, JToken n)
+        {
+            VideoEntry ve = new VideoEntry();
+            try
+            {
+                foreach (var token in n)
+                {
+                    var prop = (JProperty)token;
+                    string conf = prop.Name;
+
+                    if (conf == "display_duration")
+                    {
+                        if (prop.Value is JValue disp)
+                            ve.display_duration = disp.Value<float>();
+                    }
+                    else if (conf == "loop")
+                    {
+                        if (prop.Value is JValue loopVal)
+                            ve.loop = loopVal.Value<bool>();
+                    }
+                    else if (conf == "files")
+                    {
+                        // VideoPlayer は 1 個だけなので先頭のエントリのみ使用。
+                        var arr = (JArray)prop.Value;
+                        if (arr.Count > 0)
+                            ve.file_path = arr[0].ToString();
+                    }
+                    else if (conf == "fallback_texture")
+                    {
+                        if (prop.Value is JValue fbVal)
+                            ve.fallback_texture_path = fbVal.Value<string>();
+                    }
+                }
+
+                if (ve.file_path == "")
+                {
+                    AddPresetLoadError(preset_name, $"[video] refs key '{refs_key}' has no 'files' defined.");
+                    return null;
+                }
+
+                // ファイル存在チェック
+                string abs_path = Directory.FullName + "/" + ve.file_path;
+                if (!System.IO.File.Exists(abs_path))
+                {
+                    AddPresetLoadError(preset_name, $"[video] File not found: {abs_path}");
+                    return null;
+                }
+
+                // フォールバックテクスチャのロード
+                if (!string.IsNullOrEmpty(ve.fallback_texture_path))
+                {
+                    string fb_path = Directory.FullName + "/" + ve.fallback_texture_path;
+                    if (System.IO.File.Exists(fb_path))
+                    {
+                        try
+                        {
+                            byte[] data = File.ReadAllBytes(fb_path);
+                            string ext = Path.GetExtension(fb_path).ToLower();
+                            if (ext == ".dds")
+                            {
+                                ve.fallback_texture = LoadTextureDDS(data);
+                            }
+                            else
+                            {
+                                ve.fallback_texture = new Texture2D(2, 2);
+                                ve.fallback_texture.LoadImage(data);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Warning($"[PortraitsEx] [video] Failed to load fallback_texture '{fb_path}': {e.Message}");
+                        }
+                    }
+                    else
+                    {
+                        Log.Warning($"[PortraitsEx] [video] fallback_texture not found: {fb_path}");
+                    }
+                }
+
+                Log.Message($"[PortraitsEx] Video Entry loaded ==> preset: {preset_name} key: {refs_key} path: {abs_path} loop: {ve.loop}");
+                return ve;
+            }
+            catch (Exception e)
+            {
+                AddPresetLoadError(preset_name, $"[video] Error loading video entry for '{refs_key}': {e.Message}");
+                return null;
             }
         }
 

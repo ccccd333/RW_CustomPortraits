@@ -10,6 +10,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
     public class Refs
     {
         public Dictionary<string, Textures> txs = new Dictionary<string, Textures>();
+        /// <summary>mp4 動画エントリ。textures の代わりに video キーで JSON 定義されたもの。</summary>
+        public Dictionary<string, VideoEntry> videos = new Dictionary<string, VideoEntry>();
         public Dictionary<string, GroupPatternEntry> group_filter = new Dictionary<string, GroupPatternEntry>();
         public Dictionary<string, PriorityWeights> priority_weights = new Dictionary<string, PriorityWeights>();
         public PortraitInterrupt interrupt = new PortraitInterrupt();
@@ -54,6 +56,26 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
                 }
             }
 
+            return false;
+        }
+
+        /// <summary>
+        /// videos 辞書のキーと input を照合する。
+        /// 一致した場合は access_key にキーを設定して true を返す。
+        /// </summary>
+        public bool MatchVideoKey(string input, out string access_key)
+        {
+            access_key = "";
+            foreach (var v in videos)
+            {
+                if (v.Key == input)
+                {
+                    if (Settings.Instance.debug)
+                        Log.Message($"[PortraitsEx] video ==> key: {v.Key} input: {input}");
+                    access_key = v.Key;
+                    return true;
+                }
+            }
             return false;
         }
 
