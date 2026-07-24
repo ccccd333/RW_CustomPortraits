@@ -18,7 +18,7 @@ namespace Foxy.CustomPortraits {
 
 				// インスペクターは有効にしててもキャラごとのポートレートを設定してない場合はなにもしない
 				if (tex == null) {
-                    ConditionDrivenPortrait.Reset();
+                    ConditionDrivenPortrait.ResetAll();
 
                     return; 
 				}

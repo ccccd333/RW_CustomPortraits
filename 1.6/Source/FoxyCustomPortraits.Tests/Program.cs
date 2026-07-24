@@ -230,12 +230,12 @@ namespace FoxyCustomPortraits.Tests
 
             string json = @"
 {
-  ""idle"": {
+  ""Idle"": {
     ""loop"": {
-      ""min_count"": 1,
+      ""min_count"": 0,
       ""max_count"": 5,
       ""interrupt_contexts"": [
-        ""idle3""
+        ""CombatContext""
       ]
     },
     ""repeat_events"": {
@@ -244,16 +244,16 @@ namespace FoxyCustomPortraits.Tests
           {
             ""operation_type"": ""rand_value"",
             ""operation_base_value"": ""100"",
-            ""override_portrait_name"": ""idle2""
+            ""override_portrait_name"": ""Idle1t1""
           }
         ]
       },
       ""1"": {
         ""operations"": [
           {
-            ""operation_type"": ""portrait_context_name"",
-            ""operation_base_value"": ""wet skin"",
-            ""override_portrait_name"": ""idle_wet""
+            ""operation_type"": ""rand_value"",
+            ""operation_base_value"": ""100"",
+            ""override_portrait_name"": ""Idle1t2""
           }
         ],
         ""interrupt_contexts"": [
@@ -267,7 +267,7 @@ namespace FoxyCustomPortraits.Tests
             RepeatRules repeat_rules = new RepeatRules();
             repeat_rules.is_enabled = true;
 
-            List<string> validNames = new List<string> { "idle", "idle2", "idle_wet", "idle3", "wet skin", "sad" };
+            List<string> validNames = new List<string> { "Idle", "Idle1t1", "Idle1t2", "Walk", "CombatContext" };
             ValidationContext vc = new ValidationContext(validNames);
 
             JObject root = JObject.Parse(json);
@@ -304,36 +304,35 @@ namespace FoxyCustomPortraits.Tests
 
             Console.WriteLine("JSON loaded successfully.");
 
-            Console.WriteLine("\n--- SIMULATION 1: Enter 'idle' repeatedly with 'wet skin' active context ---");
+            Console.WriteLine("\n--- SIMULATION 1: Enter 'Idle' then 'Walk' (should not interrupt) then 'CombatContext' (should interrupt) ---");
             RunSimulation(repeat_rules, new List<SimulationInput>
             {
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string>()),
+                new SimulationInput("Walk", new List<string>()),
+                new SimulationInput("Walk", new List<string>()),
+                new SimulationInput("CombatContext", new List<string>()),
+                new SimulationInput("Idle", new List<string>()),
             });
 
-            Console.WriteLine("\n--- SIMULATION 2: Enter 'idle' then change to 'sad' then back to 'idle' ---");
+            Console.WriteLine("\n--- SIMULATION 2: Enter 'Idle' then change to 'sad' then back to 'Idle' ---");
             RunSimulation(repeat_rules, new List<SimulationInput>
             {
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
                 new SimulationInput("sad", new List<string>()),
                 new SimulationInput("sad", new List<string>()),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
             });
 
             Console.WriteLine("\n--- SIMULATION 3:  ---");
             RunSimulation(repeat_rules, new List<SimulationInput>
             {
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
-                new SimulationInput("idle3", new List<string> { "wet skin" }),
-                new SimulationInput("idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
+                new SimulationInput("Idle3", new List<string> { "wet skin" }),
+                new SimulationInput("Idle", new List<string> { "wet skin" }),
             });
         }
 
@@ -426,55 +425,59 @@ namespace FoxyCustomPortraits.Tests
                         {
                             repeat_count = 0;
                         }
+
+                        Console.WriteLine($"[Step {step}] TryApplyLoopRepeatEvent result: {loop_result}, resolved_context_name: '{loop_resolved_context_name}', repeat_count: {repeat_count}");
+                
                     }
                 }
 
                 // repeat_rulesの事後評価
-                if (!is_repeat && is_resolved && repeat_rules.is_enabled)
+                if (!is_repeat)
                 {
-                    // 同じコンテキストかどうかを判定する (前回の元のコンテキスト名 repeat_base_context と今回の元のコンテキスト名 portrait_context_name が同じか)
-                    bool is_same_context = (repeat_base_context != null && portrait_context_name == repeat_base_context);
-                    if (!is_same_context)
-                    {
-                        repeat_count = 0;
-                    }
-
-                    int repeat_index = repeat_count;
-                    if (repeat_rules.TryResolveVariantContext(
-                        portrait_context_name,
-                        repeat_index,
-                        candidate_context_names,
-                        repeat_base_context,
-                        out var resolved_context_name,
-                        out var should_increment_repeat))
-                    {
-                        if (is_same_context)
-                        {
-                            repeat_count++;
-                        }
-                        else
-                        {
-                            repeat_count = 1;
-                            repeat_base_context = portrait_context_name;
-                        }
-
-                        portrait_context_name = resolved_context_name;
-                    }
-                    else
-                    {
-                        // 該当する repeat_rules 操作がない場合
+                    if(is_resolved && repeat_rules.is_enabled){
+                        // 同じコンテキストかどうかを判定する (前回の元のコンテキスト名 repeat_base_context と今回の元のコンテキスト名 portrait_context_name が同じか)
+                        bool is_same_context = (repeat_base_context != null && portrait_context_name == repeat_base_context);
                         if (!is_same_context)
                         {
-                            repeat_count = 1;
-                            repeat_base_context = portrait_context_name;
+                            repeat_count = 0;
+                        }
+
+                        int repeat_index = repeat_count;
+                        if (repeat_rules.TryResolveVariantContext(
+                            portrait_context_name,
+                            repeat_index,
+                            candidate_context_names,
+                            repeat_base_context,
+                            out var resolved_context_name,
+                            out var should_increment_repeat))
+                        {
+                            if (is_same_context)
+                            {
+                                repeat_count++;
+                            }
+                            else
+                            {
+                                repeat_count = 1;
+                                repeat_base_context = portrait_context_name;
+                            }
+
+                            portrait_context_name = resolved_context_name;
                         }
                         else
                         {
-                            // 同じコンテキスト名が続いているが、リピートイベントが存在しない場合
-                            repeat_count++;
+                            // 該当する repeat_rules 操作がない場合
+                            if (!is_same_context)
+                            {
+                                repeat_count = 1;
+                                repeat_base_context = portrait_context_name;
+                            }
+                            else
+                            {
+                                // 同じコンテキスト名が続いているが、リピートイベントが存在しない場合
+                                repeat_count++;
+                            }
                         }
                     }
-
                     pending_context_result = portrait_context_name;
                 }
 

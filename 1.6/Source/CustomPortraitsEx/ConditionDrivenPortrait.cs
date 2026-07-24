@@ -125,6 +125,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             //Log.Message($"[PortraitsEx] Async Worker Result: preset_name {req.preset_name} portrait_context_name {portrait_context_name} is_resolved {is_resolved}");
                         }
 
+                        //Log.Message($"[PortraitsEx] [BEF] Async Worker Result: preset_name {req.preset_name} portrait_context_name {portrait_context_name} is_resolved {is_resolved} repeat_base_context {repeat_base_context} repeat_count {repeat_count}");
+
                         // repeat_rulesの事前評価(主にリピート)
                         if (req.refs.repeat_rules.is_enabled)
                         {
@@ -149,6 +151,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                                 {
                                     repeat_count = 0;
                                 }
+
+                                //Log.Message($"[PortraitsEx] Async Worker Repeat Rules: preset_name {req.preset_name} repeat_base_context {repeat_base_context} repeat_count {repeat_count} loop_result {loop_result} is_repeat {is_repeat}");
                             }
                         }
 
@@ -203,6 +207,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                             }
 
                             pending_context_result = portrait_context_name;
+                            //Log.Message($"[PortraitsEx] [AFT] Async Worker Result: preset_name {req.preset_name} portrait_context_name {portrait_context_name} is_resolved {is_resolved} repeat_base_context {repeat_base_context} repeat_count {repeat_count}");
                         }
                     }
                     catch (Exception ex)
@@ -224,15 +229,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
         }
 
-        public static void Reset()
+        public static void ResetDisplayState()
         {
             // ゲームロード開始時などに入ってくる
             while (request_queue.TryDequeue(out _)) { }
             is_calculating = false;
             current_calculating_preset = null;
             pending_context_result = null;
-            repeat_base_context = null;
-            repeat_count = 0;
 
             //temp.Clear();
             temp_index = 0;
@@ -256,7 +259,20 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             frame_interval_seconds = PortraitCacheEx.Settings.portrait_animation.frame_interval_seconds;
         }
 
+        public static void ResetRepeatState()
+        {
+            repeat_base_context = null;
+            repeat_count = 0;
+        }
 
+        /// <summary>
+        /// ゲームロード時・ポーン/プリセット切替時に呼ぶ「全部乗せ」リセット。
+        /// </summary>
+        public static void ResetAll()
+        {
+            ResetDisplayState();
+            ResetRepeatState();
+        }
 
         public static Texture2D GetPortraitTexture(Pawn pawn, string filename, Texture2D def)
         {
@@ -321,7 +337,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         {
                             //Log.Message($"[PortraitsEx] Try Visible Portrait: test 7 isHandlingAsync: {isHandlingAsync} isCalculating: {isCalculating} currentCalculatingPreset: {currentCalculatingPreset} temp_preset_name: {temp_preset_name} preset_name: {preset_name}");
                             // ポートレートが別々のポーンの場合、退避情報をクリアして、後続処理をする。
-                            Reset();
+                            ResetAll();
                         }
                     }
 
@@ -656,7 +672,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             if (portrait_context_name != temp_refs_key)
             {
                 // 心情+社交名と既に退避済みの心情+社交名が一致しないとき
-                Reset();
+                ResetDisplayState();
                 string access_key = "";
 
                 if (refs.MatchVideoKey(portrait_context_name, out access_key))
