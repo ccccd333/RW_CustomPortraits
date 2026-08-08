@@ -63,5 +63,10 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperCla
         {
             return operation.override_reset_max_count;
         }
+
+        public override bool JudgeInterruptContexts(string portrait_context_name)
+        {
+            return operation.interrupt_contexts.Contains(portrait_context_name);
+        }
     }
 }

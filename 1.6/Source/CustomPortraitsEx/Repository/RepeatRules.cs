@@ -180,12 +180,17 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
             {
                 if (op.Evaluate(args))
                 {
+                    if (op.JudgeInterruptContexts(CONTEXT_BREAK) || op.JudgeInterruptContexts(portrait_context_name))
+                    {
+                        return 0;
+                    }
+
                     var override_ctx = op.ResolveOverrideContext();
-                    applied_override_min_count = op.ResolveOverrideMinCount();
-                    applied_override_max_count = op.ResolveOverrideMaxCount();
-                    applied_override_reset_max_count = op.ResolveOverrideResetMaxCount();
                     if (!string.IsNullOrEmpty(override_ctx))
                     {
+                        applied_override_min_count = op.ResolveOverrideMinCount();
+                        applied_override_max_count = op.ResolveOverrideMaxCount();
+                        applied_override_reset_max_count = op.ResolveOverrideResetMaxCount();
                         resolved_context_name = override_ctx;
                         break;
                     }
@@ -270,12 +275,17 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
             {
                 if (op.Evaluate(args))
                 {
+                    if (op.JudgeInterruptContexts(CONTEXT_BREAK) || op.JudgeInterruptContexts(portrait_context_name))
+                    {
+                        return 0;
+                    }
+
                     var override_ctx = op.ResolveOverrideContext();
-                    applied_override_min_count = op.ResolveOverrideMinCount();
-                    applied_override_max_count = op.ResolveOverrideMaxCount();
-                    applied_override_reset_max_count = op.ResolveOverrideResetMaxCount();
                     if (!string.IsNullOrEmpty(override_ctx))
                     {
+                        applied_override_min_count = op.ResolveOverrideMinCount();
+                        applied_override_max_count = op.ResolveOverrideMaxCount();
+                        applied_override_reset_max_count = op.ResolveOverrideResetMaxCount();
                         resolved_context_name = override_ctx;
                         return 1;
                     }

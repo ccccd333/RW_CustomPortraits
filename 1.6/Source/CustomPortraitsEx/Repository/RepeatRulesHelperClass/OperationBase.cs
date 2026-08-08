@@ -110,6 +110,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperCla
         public int? override_min_count;
         public int? override_max_count;
         public int? override_reset_max_count;
+        public List<string> interrupt_contexts = new List<string>();
     }
 
     public readonly struct ValidationContext
@@ -157,5 +158,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperCla
         public abstract int? ResolveOverrideMaxCount();
 
         public abstract int? ResolveOverrideResetMaxCount();
+
+        public abstract bool JudgeInterruptContexts(string portrait_context_name);
     }
 }
