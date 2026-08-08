@@ -55,7 +55,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
             _player = _go.AddComponent<VideoPlayer>();
             _player.playOnAwake = false;
             _player.renderMode  = VideoRenderMode.RenderTexture;
-            _player.audioOutputMode = VideoAudioOutputMode.None;
+            _player.audioOutputMode = VideoAudioOutputMode.Direct;
+            _player.SetDirectAudioVolume(0, PortraitCacheEx.Settings.video_audio_volume);
             _player.sendFrameReadyEvents = true;
             _player.frameReady       += OnFrameReady;
             _player.loopPointReached += OnLoopPointReached;
