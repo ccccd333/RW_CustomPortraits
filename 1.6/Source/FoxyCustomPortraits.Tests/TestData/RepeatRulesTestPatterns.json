@@ -42,5 +42,13 @@
       "2": { "operations": [{ "operation_type": "rand_value", "operation_base_value": "100", "override_portrait_name": "MinEx3" }] },
       "3": { "operations": [{ "operation_type": "rand_value", "operation_base_value": "100", "override_portrait_name": "MinEx4" }] }
     }
+  },
+  "OpInterruptTest": {
+    "loop": { "min_count": 1, "max_count": 5 },
+    "repeat_events": {
+      "0": { "operations": [{ "operation_type": "rand_value", "operation_base_value": "100", "override_portrait_name": "OpInt0" }] },
+      "1": { "operations": [{ "operation_type": "rand_value", "operation_base_value": "100", "override_portrait_name": "OpInt1", "interrupt_contexts": ["Enemy"] }] },
+      "2": { "operations": [{ "operation_type": "rand_value", "operation_base_value": "100", "override_portrait_name": "OpInt2" }] }
+    }
   }
 }

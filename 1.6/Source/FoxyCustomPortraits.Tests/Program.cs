@@ -434,7 +434,8 @@ namespace FoxyCustomPortraits.Tests
                 "Idle", "Idle1t1", "Idle1t2", "Walk", "CombatContext",
                 "Chain", "ChainEx1", "ChainEx2", "ChainEx3",
                 "Other", "OtherEx", "Boundary", "Boundary0", "Boundary1", "Boundary2",
-                "MinCountOverride", "MinEx1", "MinEx2", "MinEx3", "MinEx4", "Interrupt"
+                "MinCountOverride", "MinEx1", "MinEx2", "MinEx3", "MinEx4", "Interrupt",
+                "OpInterruptTest", "OpInt0", "OpInt1", "OpInt2", "Enemy"
             };
             ValidationContext vc = new ValidationContext(validNames);
 
@@ -550,6 +551,15 @@ namespace FoxyCustomPortraits.Tests
                     new SimulationInput("MinCountOverride", new List<string>()), // repeat=2 => should continue
                     new SimulationInput("MinCountOverride", new List<string>()), // repeat=3 => should continue
                     new SimulationInput("MinCountOverride", new List<string>()), // repeat=4 => should exit min_count loop
+                });
+
+                Console.WriteLine("\n--- TEST: operation level interrupt_contexts breaks the base context ---");
+                RunSimulation(repeat_rules, new List<SimulationInput>
+                {
+                    new SimulationInput("OpInterruptTest", new List<string>()), // repeat=0, min_count is 1, operation 0 returns OpInt0
+                    new SimulationInput("Enemy", new List<string>()),           // repeat=1, max_count is 5. We are BETWEEN min and max. It evaluates op 1. op 1 has interrupt_contexts=["Enemy"]. Returns 0 (interrupt).
+                    new SimulationInput("OpInterruptTest", new List<string>()), // repeat=1 for Enemy. Then repeat=0 for OpInterruptTest again.
+                    new SimulationInput("OpInterruptTest", new List<string>())  // repeat=1, but NO enemy context this time, should evaluate op 1 normally.
                 });
             }
             catch (Exception ex)
