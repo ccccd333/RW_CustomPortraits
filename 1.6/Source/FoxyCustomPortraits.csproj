@@ -111,6 +111,7 @@
     <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\PortraitContextName.cs" />
     <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\RandValue.cs" />
     <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\LastContextName.cs" />
+    <Compile Include="CustomPortraitsEx\Repository\RepeatRulesHelperClass\LastContextAndRand.cs" />
     <Compile Include="CustomPortraitsEx\Repository\CachedVideoPlayer.cs" />
     <Compile Include="CustomPortraitsEx\Repository\VideoEntry.cs" />
     <Compile Include="CustomPortraitsEx\Repository\VideoPlayerManager.cs" />

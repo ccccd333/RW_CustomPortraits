@@ -7,7 +7,8 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperCla
     {
         portrait_context_name,
         rand_value,
-        last_context_name
+        last_context_name,
+        last_context_and_rand
     }
 
     public enum InequalitySign
@@ -148,6 +149,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository.RepeatRulesHelperCla
     public abstract class OperationBase
     {
         public abstract bool Init(Operation op, ValidationContext vc);
+
+        public virtual bool InitWithObject(Operation op, Newtonsoft.Json.Linq.JObject base_object, ValidationContext vc)
+        {
+            return Init(op, vc);
+        }
 
         public abstract bool Evaluate(EvaluationArgs arg);
 

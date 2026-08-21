@@ -431,6 +431,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             }
 
             List<string> valid_context_names = new List<string>(r.txs.Keys);
+            foreach (var key in r.videos.Keys)
+            {
+                if (!valid_context_names.Contains(key))
+                    valid_context_names.Add(key);
+            }
+            foreach (var key in r.cached_videos.Keys)
+            {
+                if (!valid_context_names.Contains(key))
+                    valid_context_names.Add(key);
+            }
             ValidationContext validation_context = new ValidationContext(valid_context_names);
 
             foreach (var context_token in repeat_rules_object)
@@ -566,7 +576,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 operation.inequality_sign = InequalitySign.unk;
             }
 
-            operation.operation_base_value = operation_object.Value<string>("operation_base_value") ?? operation_object.Value<string>("value") ?? "";
+            // operation_base_value が JObject の場合は複合条件。ローカルで保持し InitWithObject に直接渡す（Operation には格納しない）
+            var base_value_token = operation_object["operation_base_value"] ?? operation_object["value"];
+            JObject base_value_as_object = base_value_token as JObject;
+            if (base_value_as_object == null)
+            {
+                operation.operation_base_value = base_value_token?.Value<string>() ?? "";
+            }
             operation.override_portrait_name = operation_object.Value<string>("override_portrait_name") ?? operation_object.Value<string>("result_context_name") ?? "";
             if (operation_object.TryGetValue("override_min_count", out JToken override_min_count_token))
             {
@@ -613,11 +629,25 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                 case OperationType.last_context_name:
                     result = new LastContextName();
                     break;
+                case OperationType.last_context_and_rand:
+                    result = new LastContextAndRand();
+                    break;
                 default:
                     throw new Exception($"Unsupported repeat_rules operation_type: {operation.operation_type}");
             }
 
-            if (!result.Init(operation, validation_context))
+            bool init_ok;
+            if (base_value_as_object != null)
+            {
+                // JObject は Init 後に不要なのでローカル変数のスコープ内のみで参照される
+                init_ok = result.InitWithObject(operation, base_value_as_object, validation_context);
+            }
+            else
+            {
+                init_ok = result.Init(operation, validation_context);
+            }
+
+            if (!init_ok)
             {
                 throw new Exception($"Failed to initialize repeat_rules operation: {operation.operation_type}");
             }
