@@ -47,7 +47,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             {
                 string json = File.ReadAllText(Directory.FullName + "/" + Setting);
                 Settings = JsonConvert.DeserializeObject<PExSetting>(json);
-                Log.Message($"[PortraitsEx] Setting.json loaded: video_render_texture_width={Settings.video_render_texture_width}, video_render_texture_height={Settings.video_render_texture_height}");
+                //Log.Message($"[PortraitsEx] Setting.json loaded: video_render_texture_width={Settings.video_render_texture_width}, video_render_texture_height={Settings.video_render_texture_height}");
             }
             catch (Exception)
             {
