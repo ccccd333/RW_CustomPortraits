@@ -116,6 +116,7 @@
     <Compile Include="CustomPortraitsEx\Repository\VideoEntry.cs" />
     <Compile Include="CustomPortraitsEx\Repository\VideoPlayerManager.cs" />
     <Compile Include="CustomPortraitsEx\Repository\VideoPortraitDrawer.cs" />
+    <Compile Include="CustomPortraitsEx\PortraitTimeManager.cs" />
     <Compile Include="CustomPortraitsEx\Utility.cs" />
     <Compile Include="DDS.cs" />
     <Compile Include="Dialog_AdvancedPortraitPawn.cs" />

@@ -40,6 +40,16 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
             get => _video_audio_volume; 
             set => _video_audio_volume = UnityEngine.Mathf.Clamp01(value); 
         }
+
+        /// <summary>
+        /// 動画をステップモード（コマ送り）に切り替えるFPSの閾値
+        /// </summary>
+        public float video_step_mode_fps_threshold { get; set; } = 15.0f;
+
+        /// <summary>
+        /// 閾値未満のFPSが何フレーム連続したらステップモードへ移行するか
+        /// </summary>
+        public int video_step_mode_trigger_count { get; set; } = 1;
     }
 
     public class LogRetention
