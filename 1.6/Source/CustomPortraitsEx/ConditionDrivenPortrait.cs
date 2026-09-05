@@ -360,6 +360,11 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
         public static Texture2D GetPortraitTexture(Pawn pawn, string filename, Texture2D def)
         {
+            if (Current.ProgramState != ProgramState.Playing || Scribe.mode != LoadSaveMode.Inactive)
+            {
+                return def;
+            }
+
             //Log.Message($"[PortraitsEx] Try Visible Portrait: test 1");
             if (filename != null && filename != "" && PortraitCacheEx.IsAvailable)
             {
@@ -443,13 +448,6 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         //        Log.Message($"[PortraitsEx] ConditionDrivenPortrait.GetPortraitTexture {pendingContextResult}");
                         //}
 
-                        bool intr_is_value_fetched = false;
-                        Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
-                        if (refs.interrupt.interrupt_enabled)
-                        {
-                            intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
-                        }
-
                         bool isHandlingAsync = (is_calculating || pending_context_result != null) && current_calculating_preset == preset_name;
                         if (isHandlingAsync)
                         {
@@ -466,6 +464,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                         }
                         else
                         {
+                            bool intr_is_value_fetched = false;
+                            Dictionary<string, float> intr_impact_map = new Dictionary<string, float>();
+                            if (refs.interrupt.interrupt_enabled)
+                            {
+                                intr_impact_map = PawnPortraitInterruptContext.ComposeImpactMap(pawn, refs.interrupt, is_interrupt_active, out intr_is_value_fetched);
+                            }
+
                             if (!is_interrupt_active && intr_is_value_fetched)
                             {
                                 is_interrupt_active = true;

@@ -23,7 +23,20 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
         private Texture2D _fallback_texture;
 
         public bool is_playing => _player != null && _player.isPlaying;
-        public bool is_video_ended => _is_video_ended;
+        public bool is_video_ended
+        {
+            get
+            {
+                if (_is_video_ended) return true;
+                if (_player != null && !_loop && _has_frame && !_player.isPlaying)
+                {
+                    // Unityイベント(loopPointReached)がラグ等で不発した場合のフォールバック
+                    if (_player.frameCount > 0 && (ulong)_player.frame >= _player.frameCount - 2) return true;
+                    if (_player.length > 0 && _player.time >= _player.length - 0.1) return true;
+                }
+                return false;
+            }
+        }
 
         public CachedVideoPlayer(string absolute_path, bool loop, Texture2D fallback_texture)
         {

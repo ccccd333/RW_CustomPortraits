@@ -43,7 +43,20 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
         public bool IsPlaying => _player != null && _player.isPlaying;
         public bool IsActive => !string.IsNullOrEmpty(_currentPath);
 
-        public bool IsVideoEnded => _isVideoEnded;
+        public bool IsVideoEnded
+        {
+            get
+            {
+                if (_isVideoEnded) return true;
+                if (_player != null && !_player.isLooping && _hasFrame && !_player.isPlaying)
+                {
+                    // Unityイベント(loopPointReached)がラグ等で不発した場合のフォールバック
+                    if (_player.frameCount > 0 && (ulong)_player.frame >= _player.frameCount - 2) return true;
+                    if (_player.length > 0 && _player.time >= _player.length - 0.1) return true;
+                }
+                return false;
+            }
+        }
 
         private Texture2D _fallbackTexture;
 
