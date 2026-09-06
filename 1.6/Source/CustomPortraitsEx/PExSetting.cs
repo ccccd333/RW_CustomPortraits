@@ -44,12 +44,18 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         /// <summary>
         /// 動画をステップモード（コマ送り）に切り替えるFPSの閾値
         /// </summary>
-        public float video_step_mode_fps_threshold { get; set; } = 15.0f;
+        public float video_step_mode_fps_threshold { get; set; } = 12.0f;
 
         /// <summary>
         /// 閾値未満のFPSが何フレーム連続したらステップモードへ移行するか
         /// </summary>
-        public int video_step_mode_trigger_count { get; set; } = 1;
+        public int video_step_mode_trigger_count { get; set; } = 3;
+
+        public int video_play_mode_trigger_count { get; set; } = 20;
+
+        public int video_fps_history_size { get; set; } = 10;
+
+        public bool double_step_forward { get; set; } = true;
     }
 
     public class LogRetention

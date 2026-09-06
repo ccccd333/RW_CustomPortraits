@@ -150,6 +150,21 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx.Repository
             if (_player != null && _isStepMode && !_isVideoEnded)
             {
                 _player.StepForward();
+                if (PortraitCacheEx.Settings.double_step_forward)
+                {
+                    _player.StepForward();
+                }
+            }
+        }
+
+        public void SwitchToPlayMode()
+        {
+            _isStepMode = false;
+
+            if (_player != null && !_isVideoEnded)
+            {
+                _player.SetDirectAudioVolume(0, PortraitCacheEx.Settings.video_audio_volume);
+                _player.Play();
             }
         }
 

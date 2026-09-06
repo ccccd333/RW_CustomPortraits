@@ -44,7 +44,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
         public static UnityEngine.Texture GetActiveVideoTexture()
         {
             TickVideoStepForward();
-            
+
             if (temp_cached_video_player != null)
                 return temp_cached_video_player.GetTexture();
             return Repository.VideoPlayerManager.Instance.GetTexture();
@@ -275,7 +275,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
 
                                     portrait_context_name = resolved_context_name;
                                 }
-                                else if(loop_result == -1)
+                                else if (loop_result == -1)
                                 {
                                     if (!is_same_context)
                                     {
@@ -386,6 +386,13 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     temp_cached_video_player.SwitchToStepMode();
                 else
                     Repository.VideoPlayerManager.Instance.SwitchToStepMode();
+            }, () =>
+            {
+                temp_video_step_mode = false;
+                if (temp_cached_video_player != null)
+                    temp_cached_video_player.SwitchToPlayMode();
+                else
+                    Repository.VideoPlayerManager.Instance.SwitchToPlayMode();
             });
 
             //Log.Message($"[PortraitsEx] Try Visible Portrait: test 1");
@@ -860,7 +867,7 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     cached.PrepareStepMode();
                 else
                     cached.Play();
-                    
+
                 temp_cached_video_player = cached;
                 if (Settings.Instance.debug)
                     Log.Message($"[PortraitsEx] SwitchToVideo (cached) ==> key: {access_key} path: {abs_path} loop: {ve.loop} step_mode: {PortraitTimeManager.LowFpsDetected}");
@@ -872,17 +879,17 @@ namespace Foxy.CustomPortraits.CustomPortraitsEx
                     Repository.VideoPlayerManager.Instance.SwitchClipStepMode(abs_path, ve.loop, ve.fallback_texture);
                 else
                     Repository.VideoPlayerManager.Instance.SwitchClip(abs_path, ve.loop, ve.fallback_texture);
-                    
+
                 temp_cached_video_player = null;
                 if (Settings.Instance.debug)
                     Log.Message($"[PortraitsEx] SwitchToVideo (singleton) ==> key: {access_key} path: {abs_path} loop: {ve.loop} step_mode: {PortraitTimeManager.LowFpsDetected}");
             }
 
-            temp_is_video         = true;
-            temp_video_loop       = ve.loop;
-            temp_video_step_mode  = PortraitTimeManager.LowFpsDetected;
-            temp_refs_key         = access_key;
-            temp_preset_name      = preset_name;
+            temp_is_video = true;
+            temp_video_loop = ve.loop;
+            temp_video_step_mode = PortraitTimeManager.LowFpsDetected;
+            temp_refs_key = access_key;
+            temp_preset_name = preset_name;
             temp_display_duration = ve.display_duration;
             disp_last_update_time = Time.realtimeSinceStartup;
 
